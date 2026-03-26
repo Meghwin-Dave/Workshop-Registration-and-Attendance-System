@@ -1466,7 +1466,12 @@ def leaderboard_view(request, pk):
 @login_required(login_url="../login/")
 def feedback_analytics_view(request, pk):
     workshop = get_object_or_404(Workshop, id=pk)
-    return render(request, 'workshop/feedback_analytics.html', {'workshop': workshop, 'workshop_key': True})
+    feedbacks = Feedback.objects.filter(workshop=workshop).select_related('visitor').order_by('-id')
+    return render(request, 'workshop/feedback_analytics.html', {
+        'workshop': workshop, 
+        'workshop_key': True,
+        'feedbacks': feedbacks
+    })
 
 # --- Visitor Views ---
 

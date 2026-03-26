@@ -27,7 +27,9 @@
         setQ3(val) { this.q3_stars = val; document.getElementById('q3_val').value = val; },
         setQ5(val) { this.q5_level = val; document.getElementById('q5_val').value = val; },
         setQ7(val) { this.q7_scale = val; document.getElementById('q7_val').value = val; }
-    }" x-cloak>
+    }" 
+    x-init="lucide.createIcons(); $watch('step', () => { $nextTick(() => lucide.createIcons()) })"
+    x-cloak>
 
         <!-- Success Message -->
         <template x-if="submitted">
@@ -103,11 +105,11 @@
                                 <h3 class="text-xl font-bold text-slate-800">{{ feedback_question.question_3 }}</h3>
                                 <div class="flex items-center justify-center space-x-3 py-4">
                                     <template x-for="i in 5">
-                                        <button type="button" @click="setQ3(i)" class="transition-transform active:scale-95">
-                                            <i data-lucide="star" :class="i <= q3_stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200'" class="w-12 h-12"></i>
+                                        <button type="button" @click="setQ3(i)" class="transition-transform active:scale-95 outline-none focus:outline-none">
+                                            <i data-lucide="star" :class="i <= q3_stars ? 'text-amber-400 fill-amber-400' : 'text-slate-200'" class="w-12 h-12 pointer-events-none"></i>
                                         </button>
                                     </template>
-                                    <input type="hidden" name="question_3_response" id="q3_val" required>
+                                    <input type="hidden" name="question_3_response" id="q3_val">
                                 </div>
                             </div>
 
@@ -134,7 +136,7 @@
                                             </div>
                                         </button>
                                     </template>
-                                    <input type="hidden" name="question_5_response" id="q5_val" required>
+                                    <input type="hidden" name="question_5_response" id="q5_val">
                                 </div>
                             </div>
 
@@ -149,7 +151,7 @@
                                                 x-text="val">
                                         </button>
                                     </template>
-                                    <input type="hidden" name="question_7_response" id="q7_val" required>
+                                    <input type="hidden" name="question_7_response" id="q7_val">
                                 </div>
                             </div>
                         </div>
