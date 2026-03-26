@@ -1,257 +1,210 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 {% load static %}
 
-{% block title %}Live Workshop Dashboard - {{ workshop.workshop_name }}{% endblock %}
+{% block title %}Live Monitor | {{ workshop.workshop_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Live Dashboard: {{ workshop.workshop_name }}</h1>
-        <a href="{% url 'show_workshop' %}" class="btn btn-sm btn-secondary shadow-sm">
-            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Workshops
-        </a>
-    </div>
-
-    <!-- Stats Cards Row -->
-    <div class="row">
-        <!-- Registered Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Registered</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-registered">...</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Checked In Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Checked In</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-checked-in">...</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Remaining Seats Card -->
-        <div class="col-xl-2 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Remaining</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-remaining">...</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chair fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Feedback Card -->
-        <div class="col-xl-2 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Feedback</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-feedback">...</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-comments fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Poll Card -->
-        <div class="col-xl-2 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Poll Votes</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-poll">...</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-poll fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Heatmap & Table Occupancy -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Table Occupancy Heatmap</h6>
-                </div>
-                <div class="card-body">
-                    <div id="heatmap-container" class="d-flex flex-wrap justify-content-center gap-3">
-                        <!-- Tables will be rendered here -->
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="sr-only">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-center small">
-                        <span class="mr-2"><i class="fas fa-circle text-success"></i> Empty</span>
-                        <span class="mr-2"><i class="fas fa-circle text-warning"></i> Partially Filled</span>
-                        <span class="mr-2"><i class="fas fa-circle text-danger"></i> Full</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Occupancy Chart -->
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Occupancy Trends</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area" style="height: 300px;">
-                        <canvas id="occupancyChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .table-box {
-        width: 100px;
-        height: 100px;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        transition: transform 0.2s;
-        margin: 10px;
-    }
-    .table-box:hover {
-        transform: scale(1.1);
-        cursor: pointer;
-    }
-    .table-id { font-size: 1.2rem; }
-    .table-count { font-size: 0.8rem; }
+<div class="space-y-8" x-data="{ 
+    stats: { registered: 0, checked_in: 0, remaining: 0, feedback_count: 0, poll_participation: 0 },
+    tables: [],
+    lastUpdated: 'Just now',
     
-    .bg-green { background-color: #1cc88a; }
-    .bg-yellow { background-color: #f6c23e; }
-    .bg-red { background-color: #e74a3b; }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    const workshopUuid = "{{ workshop.workshop_uuid }}";
-    let occupancyChart;
-
-    function updateStats() {
-        $.getJSON(`/api/workshop-stats/${workshopUuid}/`, function(data) {
-            $('#stat-registered').text(data.registered);
-            $('#stat-checked-in').text(data.checked_in);
-            $('#stat-remaining').text(data.remaining);
-            $('#stat-feedback').text(data.feedback_count);
-            $('#stat-poll').text(data.poll_participation);
-        });
-    }
-
-    function updateHeatmap() {
-        $.getJSON(`/api/table-occupancy/${workshopUuid}/`, function(data) {
-            const container = $('#heatmap-container');
-            container.empty();
+    fetchData() {
+        // Fetch Stats
+        fetch(`/api/workshop-stats/{{ workshop.workshop_uuid }}/`)
+            .then(r => r.json())
+            .then(data => this.stats = data);
             
-            const labels = [];
-            const occupiedData = [];
-
-            data.tables.forEach(table => {
-                const colorClass = table.status === 'red' ? 'bg-red' : (table.status === 'yellow' ? 'bg-yellow' : 'bg-green');
-                container.append(`
-                    <div class="table-box ${colorClass} shadow">
-                        <div class="table-id">T-${table.table}</div>
-                        <div class="table-count">${table.occupied}/${table.total}</div>
-                    </div>
-                `);
-                
-                labels.push(`Table ${table.table}`);
-                occupiedData.push(table.occupied);
+        // Fetch Occupancy
+        fetch(`/api/table-occupancy/{{ workshop.workshop_uuid }}/`)
+            .then(r => r.json())
+            .then(data => {
+                this.tables = data.tables;
+                this.updateChart();
             });
-
-            updateChart(labels, occupiedData);
-        });
-    }
-
-    function updateChart(labels, data) {
-        if (!occupancyChart) {
-            const ctx = document.getElementById('occupancyChart').getContext('2d');
-            occupancyChart = new Chart(ctx, {
+            
+        this.lastUpdated = new Date().toLocaleTimeString();
+    },
+    
+    chart: null,
+    updateChart() {
+        if (!this.chart) {
+            const ctx = document.getElementById('occupancyTrendChart').getContext('2d');
+            this.chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: this.tables.map(t => `T-${t.table}`),
                     datasets: [{
-                        label: 'Occupied Seats',
-                        data: data,
-                        backgroundColor: '#4e73df',
-                        hoverBackgroundColor: '#2e59d9',
-                        borderColor: '#4e73df',
+                        label: 'Occupied',
+                        data: this.tables.map(t => t.occupied),
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6,
                     }]
                 },
                 options: {
+                    responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { beginAtZero: true, grid: { display: false } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
         } else {
-            occupancyChart.data.labels = labels;
-            occupancyChart.data.datasets[0].data = data;
-            occupancyChart.update('none'); // Update without animation for smoother refresh
+            this.chart.data.labels = this.tables.map(t => `T-${t.table}`);
+            this.chart.data.datasets[0].data = this.tables.map(t => t.occupied);
+            this.chart.update('none');
         }
     }
+}" x-init="fetchData(); setInterval(() => fetchData(), 5000)">
 
-    // Initial load
-    updateStats();
-    updateHeatmap();
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center relative">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Live Workshop Monitor</h1>
+                <p class="text-slate-500 text-sm flex items-center">
+                    <span class="font-medium text-slate-700 mr-2">{{ workshop.workshop_name }}</span>
+                    <span class="mx-2 text-slate-300">•</span>
+                    <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-slate-400"></i>
+                    Last updated: <span x-text="lastUpdated" class="ml-1 font-mono text-emerald-600"></span>
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'show_workshop' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition-all text-top">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Exit Dashboard
+            </a>
+        </div>
+    </div>
 
-    // Polling every 5 seconds
-    setInterval(() => {
-        updateStats();
-        updateHeatmap();
-    }, 5000);
+    <!-- Live Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+        <!-- Registered -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-primary-100 transition-colors">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Registered</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold text-slate-900" x-text="stats.registered">0</h3>
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Checked In -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-emerald-100 transition-colors">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Checked In</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold text-slate-900" x-text="stats.checked_in">0</h3>
+                <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                    <i data-lucide="user-check" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Remaining -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-amber-100 transition-colors">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Seats Left</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold text-slate-900" x-text="stats.remaining">0</h3>
+                <div class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                    <i data-lucide="armchair" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Feedback -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-100 transition-colors">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Feedback</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold text-slate-900" x-text="stats.feedback_count">0</h3>
+                <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Polls -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-rose-100 transition-colors">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Poll Activity</p>
+            <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold text-slate-900" x-text="stats.poll_participation">0</h3>
+                <div class="p-2 bg-rose-50 text-rose-600 rounded-lg">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Heatmap -->
+        <div class="lg:col-span-2 space-y-4">
+            <div class="flex items-center justify-between px-2">
+                <h4 class="font-bold text-slate-800">Seating Heatmap</h4>
+                <div class="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>Empty</div>
+                    <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>Partial</div>
+                    <div class="flex items-center"><span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span>Full</div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm min-h-[400px]">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <template x-for="table in tables" :key="table.table">
+                        <div class="group relative flex flex-col items-center p-4 rounded-2xl border-2 transition-all hover:scale-105 cursor-pointer"
+                             :class="{
+                                'bg-emerald-50 border-emerald-100 text-emerald-700': table.status === 'green',
+                                'bg-amber-50 border-amber-100 text-amber-700': table.status === 'yellow',
+                                'bg-rose-50 border-rose-100 text-rose-700': table.status === 'red'
+                             }">
+                            <div class="text-xs font-black opacity-40 mb-1" x-text="`TABLE` font-mono"></div>
+                            <div class="text-2xl font-black mb-1" x-text="table.table"></div>
+                            <div class="text-xs font-bold" x-text="`${table.occupied}/${table.total}`"></div>
+                            
+                            <!-- Tooltip -->
+                            <div class="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-slate-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
+                                <span x-text="`${Math.round((table.occupied/table.total)*100)}% Occupied` font-bold"></span>
+                                <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="space-y-4">
+            <h4 class="font-bold text-slate-800 px-2">Occupancy Analytics</h4>
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm h-[400px]">
+                <canvas id="occupancyTrendChart"></canvas>
+            </div>
+            
+            <!-- Active Alerts/Notifications -->
+            <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-100">
+                <div class="flex items-center space-x-3 mb-3">
+                    <i data-lucide="zap" class="w-5 h-5 text-indigo-300"></i>
+                    <h5 class="font-bold">Live Insight</h5>
+                </div>
+                <p class="text-sm text-indigo-100 leading-relaxed">
+                    Occupancy is at <span class="font-bold text-white" x-text="`${Math.round((stats.checked_in / stats.registered) * 100) || 0}%`"></span>.
+                    Most activity is seen at tables with 4+ attendees.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
 </script>
 {% endblock %}

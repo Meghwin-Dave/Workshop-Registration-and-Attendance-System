@@ -1,102 +1,135 @@
- {% extends "base.html" %} 
-
+{% extends "base_new.html" %}
 {% load static %}
 
-{% block title %} {{heading}} {% endblock title %} 
+{% block title %}{{ heading }} | WSRA{% endblock %}
 
 {% block content %}
-<style>
-    .table-head{
-        background-color: #171151 !important;
-        color: white !important;
+<div class="space-y-6" x-data="{ 
+    showDeleteModal: false, 
+    deleteUrl: '',
+    confirmDelete(url) {
+        this.deleteUrl = url;
+        this.showDeleteModal = true;
     }
-</style>
-{% if show_flag %}
+}">
+    
+    <!-- Success Message (Legacy) -->
     {% if success_msg == 1 %}
-        <input id="nameshow" value={{name1}} style="display:none;">
-        <script>
-            var name_id = document.getElementById("nameshow").value
-            alert(`Your Data Saved Successfully for Report Id ${name_id}`);
-        </script>
+        <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600 font-bold text-sm mb-6 flex items-center">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-3"></i>
+            User Data Saved Successfully (ID: {{name1}})
+        </div>
     {% endif %}
-    {% comment %} <h1 class="h3 mb-0 text-gray-800">{{ heading }}</h1> {% endcomment %}
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0">{{heading}}</h1>
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <a href="{{ add_url }}"  style="color:white;" class="d-sm-inline-block btn btn-sm btn shadow-sm bg-gradient-primary">
-                <i style="color: white;" class="fas fa-plus fa-sm -50"></i> Create User
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ heading }}</h1>
+            <p class="text-slate-500 text-sm mt-1">Manage administrative access and system roles.</p>
+        </div>
+        <div>
+            <a href="{{ add_url }}" class="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all group">
+                <i data-lucide="plus" class="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform"></i>
+                Create User
             </a>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-body">
-        <div class="table-responsive">
-            <table
-                class="table table-bordered TableDarkFont"
-                id="dataTable"
-                style="color: #000;"
-                width="100%"
-                cellspacing="0"
-            >
-            <thead>
-                <tr>
-                    {% for i in columns %}
-                        <th class="table-head"> {{i}} </th>
+    <!-- User Table -->
+    {% if show_flag %}
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100/50">
+                        {% for i in columns %}
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{{ i }}</th>
+                        {% endfor %}
+                        <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for obj in data %}
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="px-8 py-5 text-sm font-medium text-slate-400">#{{ forloop.counter }}</td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center">
+                                <div class="w-9 h-9 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center font-black text-xs mr-3 border border-primary-100">
+                                    {{ obj.first_name|default:""|first }}{{ obj.last_name|default:""|first }}
+                                </div>
+                                <span class="text-sm font-bold text-slate-900">{{ obj.first_name|default:"" }} {{ obj.last_name|default:"" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider
+                                {% if obj.role == 'Admin' %}bg-indigo-50 text-indigo-600 border border-indigo-100
+                                {% elif obj.role == 'Manager' %}bg-emerald-50 text-emerald-600 border border-emerald-100
+                                {% else %}bg-slate-100 text-slate-600 border border-slate-200{% endif %}">
+                                {{ obj.role }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="text-xs font-semibold text-slate-500">{{ obj.email }}</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="{{ edit_url }}/{{ obj.pk }}" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all" title="Edit User">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </a>
+                                <button @click="confirmDelete('{{ delete_url }}/{{ obj.pk }}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete User">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                     {% endfor %}
-                    
-                    <th class="table-head"> Actions </th>
-                </tr>
-            </thead>
-            <tbody class='TableDarkFont'>
-                {% for obj in data %}
-                <tr>
-                    <td>{{forloop.counter}}</td>
-                    <td>{{obj.first_name}} {{obj.last_name}}</td>
-                    <td>{{obj.role}}</td>  
-                    <td>{{obj.email}}</td>  
-                    <td>
-                        {% comment %} <a  href="{{ download_url }}/{{ obj.pk }}" style="padding:3px 2px" class="btn btn-info btn-circle" onclick="getid({{obj.id}})"><i class="fa fa-download"></i></a> {% endcomment %}
-                        <a  href="javascript:void(0);" style="padding:3px 2px" class="btn bg-gradient-danger btn-circle" title="Delete this User" onclick="confirmDelete('{{ delete_url }}/{{ obj.pk }}')"><i class="fa fa-trash"></i></a>
-                        <a  href="{{ edit_url }}/{{ obj.pk }}" style="padding:3px 2px" class="btn bg-gradient-success btn-circle bg-gradient-button" title="Edit this User"><i class="fa fa-pencil"></i></a>
-                    </td>
-                </tr>
-                {% endfor %}  
-            </tbody>
+                </tbody>
             </table>
         </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-[2.5rem] p-20 text-center space-y-6 shadow-sm border border-slate-100">
+        <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+            <i data-lucide="shield-alert" class="w-10 h-10"></i>
+        </div>
+        <div class="space-y-2">
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight text-center">Access Denied</h2>
+            <p class="text-slate-500 max-w-sm mx-auto">You do not have the required permissions to view this page. Please contact a system administrator.</p>
+        </div>
+        <div class="pt-4">
+            <a href="/" class="inline-flex items-center font-bold text-primary-600 hover:text-primary-700 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Return to Dashboard
+            </a>
         </div>
     </div>
+    {% endif %}
 
-    <script>
-        function confirmDelete(url) {
-            if (confirm("Are you sure you want to delete this record?")) {
-                window.location.href = url;
-            }
-        }
-    </script>
-
-    <!-- Page level plugins -->
-    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="{% static 'js/demo/datatables-demo.js' %}"></script>
-{% else %}
-<div class="text-center">
-    <div class="error mx-auto" data-text="404">404</div>
-    <p class="lead text-gray-800 mb-5">Not Authorized for this page</p>
-    <p class="text-gray-500 mb-0">Contact the admin to get the access...</p>
-    <a href="/">&larr; Back to Dashboard</a>
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showDeleteModal = false" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8 text-center space-y-6">
+                <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
+                    <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-xl font-bold text-slate-900">Delete User?</h3>
+                    <p class="text-slate-500 text-sm">This action cannot be undone. All access for this user will be revoked immediately.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button @click="showDeleteModal = false" class="flex-1 py-3 text-sm font-bold text-slate-600 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">Cancel</button>
+                    <a :href="deleteUrl" class="flex-1 py-3 text-sm font-bold text-white bg-rose-600 rounded-xl shadow-lg shadow-rose-100 hover:bg-rose-700 transition-all text-center">Confirm</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    function getid(id){
-        console.log(id,"id");
-        document.cookie = "id="+id+";path=/"
-    }
-    
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
 </script>
-
-{% endblock content %}
+{% endblock %}

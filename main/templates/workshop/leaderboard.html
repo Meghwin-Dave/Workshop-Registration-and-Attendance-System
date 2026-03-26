@@ -1,100 +1,142 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 {% load static %}
 
-{% block title %}Leaderboard - {{ workshop.workshop_name }}{% endblock %}
+{% block title %}Leaderboard | {{ workshop.workshop_name }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Workshop Leaderboard: {{ workshop.workshop_name }}</h1>
+<div class="space-y-6" x-data="{ 
+    leaderboard: [],
+    loading: true,
+    lastUpdated: '',
+    
+    fetchData() {
+        fetch(`/api/leaderboard/{{ workshop.workshop_uuid }}/`)
+            .then(r => r.json())
+            .then(data => {
+                this.leaderboard = data.leaderboard;
+                this.loading = false;
+                this.lastUpdated = new Date().toLocaleTimeString();
+            });
+    }
+}" x-init="fetchData(); setInterval(() => fetchData(), 30000)">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Workshop Leaderboard</h1>
+            <p class="text-slate-500 text-sm mt-1">Real-time point tracking for <span class="font-medium text-slate-700">{{ workshop.workshop_name }}</span></p>
+        </div>
+        <div class="flex items-center space-x-3">
+             <a href="{% url 'live_dashboard' workshop.id %}" class="text-xs font-bold text-primary-600 bg-primary-50 px-3 py-2 rounded-xl hover:bg-primary-100 transition-colors flex items-center border border-primary-100">
+                <i data-lucide="arrow-left" class="w-3 h-3 mr-1.5"></i>Back to Dashboard
+            </a>
+             <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                Auto-syncing: <span x-text="lastUpdated" class="ml-1 text-slate-600"></span>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Top 10 Participants</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="leaderboardTable" width="100%" cellspacing="0">
-                            <thead>
-                                <tr class="bg-primary text-white">
-                                    <th>Rank</th>
-                                    <th>Visitor Name</th>
-                                    <th>Total Points</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboardBody">
-                                <!-- Data will be loaded via AJAX -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Rankings Table -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-100">
+                                <th class="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center w-24">Rank</th>
+                                <th class="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Participant</th>
+                                <th class="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            <template x-if="loading">
                                 <tr>
-                                    <td colspan="3" class="text-center">Loading leaderboard...</td>
+                                    <td colspan="3" class="px-8 py-32 text-center">
+                                        <div class="flex flex-col items-center space-y-3">
+                                            <div class="w-10 h-10 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+                                            <p class="text-slate-400 text-sm font-medium">Loading rankings...</p>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            </template>
+
+                            <template x-for="user in leaderboard" :key="user.rank">
+                                <tr class="hover:bg-slate-50/50 transition-colors group">
+                                    <td class="px-8 py-5 text-center">
+                                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl font-black text-sm"
+                                             :class="{
+                                                'bg-amber-100 text-amber-700 border border-amber-200': user.rank === 1,
+                                                'bg-slate-100 text-slate-600 border border-slate-200': user.rank === 2,
+                                                'bg-orange-50 text-orange-700 border border-orange-100': user.rank === 3,
+                                                'text-slate-400 font-bold': user.rank > 3
+                                             }">
+                                            <template x-if="user.rank === 1"><i data-lucide="crown" class="w-5 h-5"></i></template>
+                                            <template x-if="user.rank !== 1"><span x-text="user.rank"></span></template>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center">
+                                            <div class="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-xs mr-3 border border-slate-100">
+                                                <span x-text="user.name.split(' ').map(n => n[0]).join('')"></span>
+                                            </div>
+                                            <span class="text-sm font-bold text-slate-900" x-text="user.name"></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        <span class="inline-flex items-center px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-black border border-primary-100" x-text="user.points"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        
-        <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">How to earn points?</h6>
+
+        <!-- Rules Sidebar -->
+        <div class="space-y-6">
+            <div class="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+                <i data-lucide="award" class="absolute -right-4 -bottom-4 w-32 h-32 text-indigo-500/20 rotate-12"></i>
+                <h4 class="text-xl font-bold mb-4 relative z-10">Gamification Rules</h4>
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/5">
+                        <span class="text-sm font-medium">Attend Workshop</span>
+                        <span class="font-black text-emerald-300">+10 pts</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/5">
+                        <span class="text-sm font-medium">Submit Feedback</span>
+                        <span class="font-black text-emerald-300">+5 pts</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/5">
+                        <span class="text-sm font-medium">Participate in Poll</span>
+                        <span class="font-black text-emerald-300">+3 pts</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Attend Workshop
-                            <span class="badge badge-success badge-pill">+10 pts</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Submit Feedback
-                            <span class="badge badge-success badge-pill">+5 pts</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Participate in Poll
-                            <span class="badge badge-success badge-pill">+3 pts</span>
-                        </li>
-                    </ul>
+                <div class="mt-8 pt-8 border-t border-white/10">
+                    <p class="text-[10px] uppercase font-black text-indigo-300 tracking-[0.2em] mb-2 text-center">Project Status</p>
+                    <div class="flex justify-center space-x-2">
+                        <div class="w-3 h-3 bg-white rounded-full animate-bounce"></div>
+                        <div class="w-3 h-3 bg-white rounded-full animate-bounce delay-75"></div>
+                        <div class="w-3 h-3 bg-white rounded-full animate-bounce delay-150"></div>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Empty space for potential future stats -->
+            <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-8 text-center">
+                 <p class="text-slate-400 text-xs italic">Point system is calculated automatically based on visitor actions.</p>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    const workshopUuid = "{{ workshop.workshop_uuid }}";
-
-    function updateLeaderboard() {
-        $.getJSON(`/api/leaderboard/${workshopUuid}/`, function(data) {
-            const body = $('#leaderboardBody');
-            body.empty();
-            
-            if (data.leaderboard.length === 0) {
-                body.append('<tr><td colspan="3" class="text-center">No points earned yet.</td></tr>');
-            } else {
-                data.leaderboard.forEach(entry => {
-                    let rankClass = '';
-                    if (entry.rank === 1) rankClass = 'table-warning font-weight-bold';
-                    else if (entry.rank === 2) rankClass = 'table-light';
-                    else if (entry.rank === 3) rankClass = 'table-light';
-
-                    body.append(`
-                        <tr class="${rankClass}">
-                            <td>#${entry.rank}</td>
-                            <td>${entry.name}</td>
-                            <td>${entry.points}</td>
-                        </tr>
-                    `);
-                });
-            }
-        });
-    }
-
-    // Initial load
-    updateLeaderboard();
-    // Refresh every 30 seconds
-    setInterval(updateLeaderboard, 30000);
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
 </script>
 {% endblock %}

@@ -1,175 +1,264 @@
 {% load static %}
-{% load crispy_forms_tags %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>Workshop Details</title>
-
-    <!-- Custom fonts for this template-->
-    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
-    <link
-        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
-        rel="stylesheet">
-
-    <!-- Custom styles for this template-->
-    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
-
+    <title>Register | {{ workshop_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .register-logo {
-            max-width: 500px;
-            padding-top: 30px;
-        }
-
-        @media screen and (max-width: 480px) {
-            .register-logo {
-                max-width: 350px;
-                padding-top: 30px;
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc',
+                            400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1',
+                            800: '#075985', 900: '#0c4a6e',
+                        }
+                    }
+                }
             }
         }
-
-        .section {
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            background-color: #f9f9f9;
-        }
-
-        .section h4 {
-            color: black;
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-
-        .section ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .section ul li {
-            padding: 5px 0;
-        }
-
-        .icon {
-            margin-right: 10px;
-            color: black;
-        }
-
-        .header-title {
-            text-align: center;
-            color: black;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-    </style>
+    </script>
 </head>
+<body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="max-w-4xl w-full" x-data="{ 
+        step: {% if form_errors %}2{% else %}1{% endif %}, 
+        completed: {% if completed %}true{% else %}false{% endif %}, 
+        closed: {% if closed %}true{% else %}false{% endif %} 
+    }" x-cloak>
+        
+        <!-- Closed Message -->
+        <template x-if="closed">
+            <div class="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
+                <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto">
+                    <i data-lucide="lock" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Registration Closed</h1>
+                <p class="text-slate-500 max-w-md mx-auto">We're sorry, but registration for this workshop has now closed. Please contact the administrator for more information.</p>
+            </div>
+        </template>
 
-<body class="bg-gradient-primary">
+        <!-- Completed Message -->
+        <template x-if="completed">
+            <div class="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center space-y-6">
+                <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
+                    <i data-lucide="party-popper" class="w-10 h-10"></i>
+                </div>
+                <div class="space-y-2">
+                    <h1 class="text-3xl font-bold text-slate-900">Registration Successful!</h1>
+                    <p class="text-slate-500 max-w-lg mx-auto text-lg leading-relaxed">
+                        Thank you for registering for <span class="font-semibold text-primary-600">{{ workshop_name }}</span>. 
+                        Your seating arrangement and tickets will be shared via email shortly. We look forward to seeing you there!
+                    </p>
+                </div>
+                <div class="pt-4">
+                    <a href="/" class="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all">
+                        <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                        Return to Home
+                    </a>
+                </div>
+            </div>
+        </template>
 
-    <div class="container">
+        <!-- Multi-Step Wizard -->
+        <template x-if="!closed && !completed">
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+                
+                <!-- Sidebar Info -->
+                <div class="md:w-1/3 bg-slate-900 p-8 text-white flex flex-col justify-between">
+                    <div>
+                        <div class="mb-8">
+                            {% if workshop_logo %}
+                                <img src="/media/{{ workshop_logo }}" class="h-12 w-auto brightness-0 invert" alt="Logo">
+                            {% else %}
+                                <div class="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <h2 class="text-xl font-bold mb-4">{{ workshop_name }}</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3 text-slate-400 text-sm">
+                                <i data-lucide="calendar" class="w-5 h-5 text-primary-400 mt-0.5"></i>
+                                <div>
+                                    <p class="text-white font-medium">Dates</p>
+                                    <p>{{ workshop_start_date|date:"d M Y" }} - {{ workshop_end_date|date:"d M Y" }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 text-slate-400 text-sm">
+                                <i data-lucide="map-pin" class="w-5 h-5 text-primary-400 mt-0.5"></i>
+                                <div>
+                                    <p class="text-white font-medium">Location</p>
+                                    <p>{{ workshop_location }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Outer Row -->
-        <div class="row justify-content-center">
+                    <!-- Progress Stepper -->
+                    <div class="mt-12 space-y-6">
+                        <div class="flex items-center space-x-4">
+                            <div :class="step >= 1 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">1</div>
+                            <span :class="step >= 1 ? 'text-white font-semibold' : 'text-slate-500'">Review Event</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div :class="step >= 2 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">2</div>
+                            <span :class="step >= 2 ? 'text-white font-semibold' : 'text-slate-500'">Personal Info</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div :class="step >= 3 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">3</div>
+                            <span :class="step >= 3 ? 'text-white font-semibold' : 'text-slate-500'">Final Details</span>
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Workshop Details -->
-            <div class="col-xl-6 col-lg-6 col-md-6">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Logo -->
-                        <div class="d-flex justify-content-center">
-                            <img src="/media/{{ workshop_logo }}" class="register-logo" alt="Workshop Logo">
+                <!-- Form Content -->
+                <div class="md:w-2/3 p-8 md:p-12">
+                    <form action="" method="POST" class="h-full flex flex-col">
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Workshop Overview -->
+                        <div x-show="step === 1" class="space-y-6 h-full">
+                            <div class="space-y-2">
+                                <h3 class="text-2xl font-bold text-slate-900">Event Overview</h3>
+                                <p class="text-slate-500">Please review the workshop details before proceeding.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                                <h4 class="font-semibold text-slate-800">About this workshop</h4>
+                                <p class="text-sm text-slate-600 leading-relaxed">{{ workshop_description }}</p>
+                            </div>
+                            <div class="flex-grow"></div>
+                            <button type="button" @click="step = 2" class="w-full py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all flex items-center justify-center">
+                                Continue to Details
+                                <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+                            </button>
                         </div>
 
-                        <!-- Details -->
-                        <div class="p-4">
-                            <div class="header-title">
-                                Workshop Detail
+                        <!-- Step 2: Personal Information -->
+                        <div x-show="step === 2" x-transition class="space-y-6 h-full">
+                            <div class="space-y-2">
+                                <h3 class="text-2xl font-bold text-slate-900">Attendee Information</h3>
+                                <p class="text-slate-500">How should we address you and send your tickets?</p>
                             </div>
-                            <div class="section">
-                                <h4><i class="fas fa-book icon"></i> Title</h4>
-                                <p>{{ workshop_name }}</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">Prefix</label>
+                                    <select name="prefix_first_name_0" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="Dr.">Dr.</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-2 space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">First Name</label>
+                                    <input type="text" name="prefix_first_name_1" value="{{ form.prefix_first_name.value.1|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="John">
+                                </div>
                             </div>
-                            <div class="section">
-                                <h4><i class="fas fa-calendar icon"></i> Workshop Dates</h4>
-                                <ul>
-                                    {% for date in date_list %}
-                                    <li>{{ date }}</li>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700">Last Name</label>
+                                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Doe">
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">Email Address</label>
+                                    <input type="email" name="email" value="{{ form.email.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="john@example.com">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">Mobile Number</label>
+                                    <input type="tel" name="mobile_number" value="{{ form.mobile_number.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="+1 (555) 000-0000">
+                                </div>
+                            </div>
+
+                            {% if form_errors %}
+                            <div class="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                                <p class="text-xs font-bold text-rose-600 uppercase mb-2">Please correct the following:</p>
+                                <ul class="text-xs text-rose-500 list-disc list-inside space-y-1">
+                                    {% for field, errors in form_errors.items %}
+                                        <li>{{ field|title }}: {{ errors.0 }}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
-                            <div class="section">
-                                <h4><i class="fas fa-map-marker-alt icon"></i> Location</h4>
-                                <p>{{ workshop_location }}</p>
-                            </div>
-                            <div class="section">
-                                <h4><i class="fas fa-info-circle icon"></i> About</h4>
-                                <p>{{ workshop_description }}</p>
+                            {% endif %}
+
+                            <div class="flex-grow"></div>
+                            <div class="flex space-x-4">
+                                <button type="button" @click="step = 1" class="px-6 py-4 text-slate-600 font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">Back</button>
+                                <button type="button" @click="step = 3" class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Next Step</button>
                             </div>
                         </div>
-                    </div>
+
+                        <!-- Step 3: Professional Details -->
+                        <div x-show="step === 3" x-transition class="space-y-6 h-full">
+                            <div class="space-y-2">
+                                <h3 class="text-2xl font-bold text-slate-900">Professional Details</h3>
+                                <p class="text-slate-500">Almost done! Just a few more details.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">Department</label>
+                                    <input type="text" name="department" value="{{ form.department.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Engineering">
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700">Are you a Presenter?</label>
+                                    <select name="is_presenter" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                                        <option value="False">No</option>
+                                        <option value="True">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700">Designation Selection</label>
+                                <select name="designation" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                                    <option value="">Select Designation</option>
+                                    {% if form.fields.designation.choices %}
+                                        {% for choice_id, choice_label in form.fields.designation.choices %}
+                                            {% if choice_id %}
+                                                <option value="{{ choice_id }}" {% if form.designation.value == choice_id|stringformat:"s" %}selected{% endif %}>{{ choice_label }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700">Specific Title (if not in list)</label>
+                                <input type="text" name="designation_text" value="{{ form.designation_text.value|default:'' }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Lead Architect">
+                            </div>
+
+                            <div class="flex items-start space-x-3 p-4 bg-primary-50 rounded-2xl border border-primary-100 italic text-sm text-primary-700">
+                                <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
+                                <p>By clicking submit, you agree to receive event-related notifications and your QR ticket via email.</p>
+                            </div>
+
+                            <div class="flex-grow"></div>
+                            <div class="flex space-x-4">
+                                <button type="button" @click="step = 2" class="px-6 py-4 text-slate-600 font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">Back</button>
+                                <button type="submit" class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Submit Registration</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <!-- Registration -->
-            <div class="col-xl-6 col-lg-6 col-md-6">
-                <div class="card o-hidden border-0 shadow-lg my-5">
-                    <div class="card-body p-0">
-                        <!-- Logo -->
-                        <div class="d-flex justify-content-center">
-                            <img src="{% static 'logo1.png' %}" style="max-width: 120px; padding-top: 30px;" alt="Logo">
-                        </div>
-
-                        <!-- Registration Content -->
-                        {% if closed %}
-                        <div class="text-center">
-                            <p class="h4 mb-4" style="color:red; padding:20px;">We are sorry, but registration for this
-                                workshop has now closed.</p>
-                        </div>
-                        {% else %}
-                        {% if not completed %}
-                        <div class="p-5">
-                            <div class="text-center">
-                                <h1 class="h4 text-gray-900 mb-4">Registration Page</h1>
-                            </div>
-                            <div class="text-center">
-                                <h4 class="h6 text-danger mb-4">{{ message }}</h4>
-                            </div>
-
-                            <form class="user" action="" method="POST">
-                                {% crispy form %}
-                                
-                                {% comment %} {{ form.as_p }}  {% endcomment %}
-                                <input type="submit" style="color:white;" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Submit">
-                            </form>
-                        </div>
-                        {% else %}
-                        <div class="text-center" style="padding:20px;">
-                            <p class="h4 mb-4" style="color:green; ">Thank you for registering!</p>
-                            <p class="h4 mb-4" style="color:green; ">Your seating arrangement will be shared soon. We look forward to seeing you at the workshop. Stay tuned for further details!</p>
-                            
-                        </div>
-                        {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
+        </template>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
-    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
-    <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
-
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
-
 </html>
-

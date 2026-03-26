@@ -1,257 +1,122 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Ticket</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
-
-    <!-- Custom styles -->
-    <link href="{% static 'sb-admin-2.min.css' %}" rel="stylesheet" />
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Your Ticket | {{ workshop.workshop_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-      body {
-        background-color: #4e73df;
-        background-image: linear-gradient(10deg, rgb(0, 174, 239) 0%, rgb(28, 117, 188) 100%);
-        background-size: cover;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      
-      .ticket {
-        background: white;
-        max-width: 990px;
-        border-radius: 15px;
-        padding: 1.8rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        border: 2px solid #4e73df;
-      }
-      
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-      
-      .header .title-section {
-        display: flex;
-        align-items: center;
-        flex-grow: 1;
-        justify-content: center;
-        gap: 1rem;
-      }
-      
-      .header h1 {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #333;
-        text-transform: uppercase;
-        margin: 0;
-      }
-      .header .title-decoration {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-      }
-      
-      .header .line {
-        width: 60px;
-        height: 3px;
-        background-color: orange;
-        border-radius: 2px;
-        margin-top: 9px;
-      }
-      
-      .company_logo,
-      .register-logo {
-        width: 130px;
-      }
-      
-      .confirmation {
-        text-align: center;
-        margin-bottom: 1rem;
-      }
-      
-      .confirmation h4 {
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
-      }
-      
-      .details {
-        font-size: 1.2rem;
-        color: #333;
-        margin-bottom: 50px;
-      }
-      
-      .details p {
-        margin-bottom: 0px;
-      }
-      
-      .event-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.2rem;
-        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
-        margin-top: 1.2rem;
-      }
-      
-      .brand-logo {
-        width: 336px;
-        height: auto;
-        border-radius: 10px;
-      }
-      
-      .event-details {
-        flex: 1;
-        padding-left: 2.4rem;
-      }
-      
-      .event-details h4 {
-        font-size: 1.6rem;
-        color: #333;
-        margin-bottom: 0.5rem;
-      }
-      
-      .event-details p ul li {
-        font-size: 1.1rem;
-        margin: 0.3rem;
-        color: #555;
-      }
-      
-      .qr-logo {
-        width: 180px;
-        height: auto;
-        margin-left: 1rem;
-      }
-      
-      @media (max-width: 768px) {
-        .ticket {
-          padding: 1rem;
+        body { font-family: 'Inter', sans-serif; }
+        .ticket-cutout-left, .ticket-cutout-right {
+            width: 2rem;
+            height: 2rem;
+            background: #6366f1; /* Matches body bg */
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            margin-top: -1rem;
+            z-index: 10;
         }
-      
-        .header {
-          flex-direction: column;
-          text-align: center;
-        }
-      
-        .header .title-section {
-          flex-direction: column;
-        }
-      
-        .header h1 {
-          font-size: 2rem;
-        }
-      
-        .event-section {
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-        }
-      
-        .company_logo,
-        .register-logo {
-          max-width: 100px;
-        }
-      
-        .brand-logo,
-        .qr-logo {
-          max-width: 250px;
-        }
-      
-        .event-details {
-          text-align: center;
-          padding: 0;
-        }
-      }
-      
-      /* Small devices */
-      @media (max-width: 480px) {
-        .header h1 {
-          font-size: 1.5rem;
-        }
-      
-        .details {
-          font-size: 1rem;
-        }
-      
-        .event-details h4 {
-          font-size: 1.3rem;
-        }
-      
-        .event-details p,
-        .event-details ul li {
-          font-size: 0.9rem;
-        }
-      }
+        .ticket-cutout-left { left: -1rem; }
+        .ticket-cutout-right { right: -1rem; }
     </style>
-    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css" />
-  </head>
+</head>
+<body class="bg-indigo-600 min-h-screen flex items-center justify-center p-4 md:p-8">
+    
+    <div class="max-w-xl w-full relative">
+        <!-- Ticket Container -->
+        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-white/20">
+            
+            <!-- Top Section (Event Info) -->
+            <div class="p-8 md:p-10 pb-6 border-b-2 border-dashed border-slate-100 relative">
+                <div class="flex items-center justify-between mb-8">
+                    {% if workshop.company_logo %}
+                        <img src="{{ workshop.company_logo.url }}" class="h-10 w-auto object-contain">
+                    {% else %}
+                        <div class="text-xs font-black text-slate-300 uppercase tracking-widest">WSRA PASS</div>
+                    {% endif %}
+                    <div class="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                        Confirmed
+                    </div>
+                </div>
 
-  <body>
-    <div class="ticket">
-      <div class="header">
-        {% if workshop.company_logo %}
-          <img src="{{ workshop.company_logo.url }}" class="company_logo" alt="Company Logo" />
-        {% else %}
-          <p>No Company logo</p>
-        {% endif %}
-        <div class="title-section">
-          <div class="line"></div>
-          <h1>Your Ticket</h1>
-          <div class="line"></div>
-        </div>
-        <img src="{% static 'logo1.png' %}" class="register-logo" alt="Register Logo" />
-      </div>
+                <div class="space-y-4">
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight tracking-tight uppercase italic decoration-primary-500 underline-offset-8">
+                        {{ workshop.workshop_name }}
+                    </h1>
+                    
+                    <div class="flex flex-wrap gap-4 text-slate-500">
+                        <div class="flex items-center text-xs font-bold uppercase tracking-wider bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 mr-2 text-indigo-500"></i>
+                            {{ workshop.workshop_start_date|date:"M d, Y" }}
+                        </div>
+                        <div class="flex items-center text-xs font-bold uppercase tracking-wider bg-slate-50 px-3 py-2 rounded-xl border border-slate-100">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 mr-2 text-indigo-500"></i>
+                            {{ workshop.workshop_start_date|date:"g:i A" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ticket Cutouts -->
+                <div class="ticket-cutout-left bg-indigo-600"></div>
+                <div class="ticket-cutout-right bg-indigo-600"></div>
+            </div>
 
-      <div class="confirmation">
-        <h4 style="color: green">Your Seat is Confirmed!</h4>
-        <div class="details">
-          <h5>{{ full_name }}</h5>
-          <p>
-            <strong>Table Name:</strong> {{ alloted_table }}
-          </p>
-          <p>
-            <strong>Group Name:</strong> {{ alloted_group }}
-          </p>
-        </div>
-      </div>
+            <!-- Bottom Section (Attendee Info) -->
+            <div class="p-8 md:p-10 bg-slate-50/50">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="space-y-6">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Attendee</p>
+                            <h2 class="text-2xl font-black text-slate-900 truncate">{{ full_name }}</h2>
+                        </div>
 
-      <div class="event-section">
-        <img src="{{ workshop.workshop_logo.url }}" class="brand-logo" alt="Event Image" onerror="this.onerror=null; this.src='{% static 'path/to/default/image.png' %}'" />
-        <div class="event-details">
-          {% comment %} <h4>{{ workshop.workshop_name }}</h4> {% endcomment %}
-          <p>
-            <i class="fas fa-clock"></i> {{ workshop.workshop_start_date|date:'g:i A' }}
-          </p>
-          <ul style="list-style: none; padding-left: 0;">
-            {% for date in date_list %}
-              <li style="display: flex; align-items: center; margin-bottom: 5px;">
-                <i class="fas fa-calendar-check" style="margin-right: 10px;"></i>
-                {{ date|date:'j F Y' }}
-              </li>
-            {% endfor %}
-          </ul>
-          <p>
-            <i class="fas fa-map-marker-alt"></i> {{ workshop.workshop_location }}
-          </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Table</p>
+                                <p class="text-lg font-black text-slate-800">{{ alloted_table|default:"-" }}</p>
+                            </div>
+                            <div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-1">Group</p>
+                                <p class="text-lg font-black text-slate-800">{{ alloted_group|default:"-" }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center text-sm text-slate-500 font-medium">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-slate-400"></i>
+                            <span class="truncate">{{ workshop.workshop_location }}</span>
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="flex flex-col items-center">
+                        <div class="p-4 bg-white rounded-3xl shadow-xl shadow-indigo-100 border-4 border-indigo-50 inline-block relative group">
+                            <img src="{{ qr_code_url }}" class="w-32 h-32 md:w-40 md:h-40 relative z-10" alt="Ticket QR">
+                            <div class="absolute inset-0 bg-primary-600 opacity-0 group-hover:opacity-5 transition-opacity rounded-2xl"></div>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mt-6">Scan at Entry</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Branding Footer -->
+            <div class="bg-slate-900 p-4 text-center">
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    Powered by <span class="text-white italic">WSRA Platform</span>
+                </p>
+            </div>
         </div>
-        <img src="{{ qr_code_url }}" class="qr-logo" alt="QR Code" />
-      </div>
-      <p style="text-align: center; font-size: 13px; color: #555; margin-top: 1.5rem;">Please note: The details provided on this ticket apply to All days of the workshop.</p>
+
+        <!-- Decorative Elements -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl -z-10"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-400/20 rounded-full blur-3xl -z-10"></div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  </body>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
 </html>

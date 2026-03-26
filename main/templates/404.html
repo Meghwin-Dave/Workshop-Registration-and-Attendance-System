@@ -1,22 +1,49 @@
-{% extends "base.html" %} 
-
+{% extends "base_new.html" %}
 {% load static %}
 
-{% block title %} {{heading}} {% endblock title %} 
+{% block title %}404 - Page Not Found | WSRA{% endblock %}
 
 {% block content %}
-<!-- Begin Page Content -->
-<div class="container-fluid">
-
-    <!-- 404 Error Text -->
-    <div class="text-center">
-        <div class="error mx-auto" data-text="404">404</div>
-        <p class="lead text-gray-800 mb-5">Page Not Found</p>
-        <p class="text-gray-500 mb-0">It looks like you found a glitch in the matrix...</p>
-        <a href="/">&larr; Back to Dashboard</a>
+<div class="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8 animate-in fade-in duration-700">
+    <div class="relative">
+        <div class="text-[12rem] font-black text-slate-100 select-none">404</div>
+        <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-24 h-24 bg-white rounded-3xl shadow-2xl shadow-slate-200/50 flex items-center justify-center text-primary-600 border border-slate-100">
+                <i data-lucide="compass" class="w-12 h-12 animate-spin-slow"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="space-y-3 max-w-sm">
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">You've reached a dead end</h1>
+        <p class="text-slate-500 font-medium">It looks like the page you are searching for has moved or no longer exists. Let's get you back on track.</p>
     </div>
 
+    <div class="pt-4 flex flex-col sm:flex-row items-center gap-4">
+        <a href="/" class="px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl shadow-primary-100 hover:bg-primary-700 transition-all flex items-center">
+            <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+            Back to Dashboard
+        </a>
+        <button onclick="history.back()" class="px-8 py-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all">
+            Go Back
+        </button>
+    </div>
 </div>
-<!-- /.container-fluid -->
 
-{% endblock content %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
+<style>
+    .animate-spin-slow {
+        animation: spin 8s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+{% endblock %}

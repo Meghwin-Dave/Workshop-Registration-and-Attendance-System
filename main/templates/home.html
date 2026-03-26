@@ -1,270 +1,163 @@
-{% extends 'base.html' %}
+{% extends 'base_new.html' %}
 {% load static %}
 
-{% block title %}
-  Dashboard
-{% endblock %}
+{% block title %}Dashboard | WSRA{% endblock %}
+
 {% block content %}
-  {% if messages %}
-    <div class="container-fluid position-fixed top-0 end-0 p-3" style="z-index: 1050; pointer-events: none;">
-      <div class="toast-container position-absolute">
-        {% for message in messages %}
-          <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" style="pointer-events: auto;">
-            <div class="toast-header bg-{{ message.tags|default:'info' }} text-white">
-              <strong class="me-auto">Notification</strong>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">{{ message }}</div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-  {% endif %}
-
-  <div class="container mt-4">
-    <div class="row">
-      <div class="col-12 col-md-3 mb-4">
-        <div class="card border-primary">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="card-title text-primary">Total Workshops</h5>
-                <p class="card-text display-6 font-weight-bold">{{ total_workshops|default:'No data' }}</p>
-              </div>
-            </div>
-          </div>
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Executive Overview</h1>
+            <p class="text-slate-500 text-sm mt-1">Welcome back! Here's what's happening today.</p>
         </div>
-      </div>
-
-      <div class="col-12 col-md-3 mb-4">
-        <div class="card border-success">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 class="card-title text-success">Total Visitors</h5>
-                <p class="card-text display-6 font-weight-bold">{{ total_visitors|default:'No data' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row mt-4">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="card-title">Monthly Workshops</h5>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="position: relative; height: 250px;">
-              {% if months and workshop_counts %}
-                <canvas id="workshopBarChart" height="250"></canvas>
-              {% else %}
-                <div class="alert alert-warning">No workshop data available</div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="row mt-4">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="card-title">Workshops with Positive Feedbacks</h5>
-            </div>
-            <div class="card-body">
-              <div class="chart-container" style="position: relative; height: 250px;">
-                {% if workshop_names and positive_feedback_counts %}
-                  <canvas id="positiveWorkshopPieChart" height="250"></canvas>
-                {% else %}
-                  <div class="alert alert-warning">No positive feedback data available</div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
+        <div class="flex items-center space-x-3">
+            <!-- Action buttons removed per user request -->
         </div>
     </div>
-  </div>
 
-  <style>
-    @media (max-width: 768px) {
-      .card-title {
-        font-size: 1rem;
-      }
-      .display-6 {
-        font-size: 1.5rem;
-      }
-      .container {
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-    }
-  </style>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Workshops -->
+        <div class="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform">
+                    <i data-lucide="calendar" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
+            </div>
+            <p class="text-sm font-medium text-slate-500">Total Workshops</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_workshops }}</h3>
+        </div>
+
+        <!-- Visitors -->
+        <div class="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">+8%</span>
+            </div>
+            <p class="text-sm font-medium text-slate-500">Registered Visitors</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_visitors }}</h3>
+        </div>
+
+        <!-- Checked In -->
+        <div class="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{{ total_checked_in|default:0 }} in</span>
+            </div>
+            <p class="text-sm font-medium text-slate-500">Checked-in Visitors</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_checked_in }}</h3>
+        </div>
+
+        <!-- Feedback -->
+        <div class="group p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
+                    <i data-lucide="message-square" class="w-6 h-6"></i>
+                </div>
+                <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">New</span>
+            </div>
+            <p class="text-sm font-medium text-slate-500">Feedback Received</p>
+            <h3 class="text-2xl font-bold text-slate-900 mt-1">{{ total_feedback }}</h3>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Workshop Trend -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-slate-800">Monthly Workshops</h3>
+                <div class="text-xs font-medium text-slate-400">Current Year</div>
+            </div>
+            <div class="h-64">
+                <canvas id="workshopTrendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Positive Feedback Pie -->
+        <div class="p-6 bg-white rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-slate-800">Positive Feedback Dist.</h3>
+                <div class="text-xs font-medium text-slate-400">Top Performing</div>
+            </div>
+            <div class="h-64">
+                <canvas id="feedbackPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_js %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <script>
-    $(document).ready(function () {
-      $('.toast').each(function () {
-        var toast = new bootstrap.Toast(this, { delay: 5000 });
-        toast.show();
-      });
-    });
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
     document.addEventListener('DOMContentLoaded', function () {
-      // Chart.js code remains exactly the same as in the original file
-      console.log('Chart.js available:', !!window.Chart);
+        // Bar Chart
+        const trendCtx = document.getElementById('workshopTrendChart').getContext('2d');
+        const months = JSON.parse('{{ months|safe }}');
+        const counts = JSON.parse('{{ workshop_counts|safe }}');
 
-      var rawMonths = '{{ months|safe }}';
-      var rawWorkshopCounts = '{{ workshop_counts|safe }}';
-
-      console.log('Raw Months:', rawMonths);
-      console.log('Raw Workshop Counts:', rawWorkshopCounts);
-
-      try {
-        var months = JSON.parse(rawMonths);
-        var workshopCounts = JSON.parse(rawWorkshopCounts);
-
-        console.log('Parsed Months:', months);
-        console.log('Parsed Workshop Counts:', workshopCounts);
-
-        var ctx = document.getElementById('workshopBarChart');
-
-        if (!ctx) {
-          console.error('Canvas element not found!');
-          return;
-        }
-
-        if (months.length > 0 && workshopCounts.length > 0) {
-          var chart = new Chart(ctx, {
+        new Chart(trendCtx, {
             type: 'bar',
             data: {
-              labels: months,
-              datasets: [
-                {
-                  label: 'Number of Workshops',
-                  data: workshopCounts,
-                  backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue color (light blue)
-                  borderColor: 'rgba(54, 162, 235, 1)', // Darker blue for the borders
-                  borderWidth: 1,
-                  borderRadius: 5, // Rounded corners
-                  hoverBackgroundColor: 'rgba(54, 162, 235, 0.8)', // Darker blue hover effect
-                  hoverBorderColor: 'rgba(54, 162, 235, 1)', // Hover border color
-                  hoverBorderWidth: 2,
-                }
-              ]
+                labels: months,
+                datasets: [{
+                    label: 'Workshops',
+                    data: counts,
+                    backgroundColor: '#0ea5e9',
+                    borderRadius: 8,
+                    barThickness: 20,
+                }]
             },
             options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  title: {
-                    display: true,
-                    text: 'Month',
-                    font: { size: 14, weight: 'bold' }
-                  },
-                  grid: {
-                    display: false, // Hide x-axis grid
-                  }
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 },
-                y: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Number of Workshops',
-                    font: { size: 14, weight: 'bold' }
-                  },
-                  grid: {
-                    color: 'rgba(0, 0, 0, 0.1)' // Light grid color
-                  }
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5], drawBorder: false } },
+                    x: { grid: { display: false } }
                 }
-              },
-              plugins: {
-                tooltip: {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  titleColor: '#fff',
-                  bodyColor: '#fff',
-                  padding: 10,
-                }
-              }
             }
-          });
+        });
 
-          console.log('Chart created successfully');
-        } else {
-          console.warn('No data available for chart');
-        }
-      } catch (error) {
-        console.error('Chart creation error:', error);
-      }
-    });
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Pie Chart code remains exactly the same as in the original file
-      try {
-        var workshopNames = JSON.parse('{{ workshop_names|safe }}');
-        var positiveFeedbackCounts = JSON.parse('{{ positive_feedback_counts|safe }}');
+        // Pie Chart
+        const pieCtx = document.getElementById('feedbackPieChart').getContext('2d');
+        const names = JSON.parse('{{ workshop_names|safe }}');
+        const feedbackCounts = JSON.parse('{{ positive_feedback_counts|safe }}');
 
-        var pieCtx = document.getElementById('positiveWorkshopPieChart');
-
-        if (workshopNames.length > 0 && positiveFeedbackCounts.length > 0) {
-          var pieChart = new Chart(pieCtx, {
-            type: 'pie',
+        new Chart(pieCtx, {
+            type: 'doughnut', // Using doughnut for modern look
             data: {
-              labels: workshopNames,
-              datasets: [{
-                data: positiveFeedbackCounts,
-                backgroundColor: [
-                  'rgba(75, 192, 192, 0.6)',    // Teal
-                  'rgba(54, 162, 235, 0.6)',    // Blue
-                  'rgba(255, 206, 86, 0.6)',    // Yellow
-                  'rgba(231, 233, 237, 0.6)',   // Light Grey
-                  'rgba(255, 99, 132, 0.6)',    // Pink
-                ],
-                borderColor: [
-                  'rgba(75, 192, 192, 1)',
-                  'rgba(54, 162, 235, 1)',
-                  'rgba(255, 206, 86, 1)',
-                  'rgba(231, 233, 237, 1)',
-                  'rgba(255, 99, 132, 1)',
-                ],
-                borderWidth: 1
-              }]
+                labels: names,
+                datasets: [{
+                    data: feedbackCounts,
+                    backgroundColor: [
+                        '#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
             },
             options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                title: {
-                  display: true,
-                  text: 'Workshops with Positive Feedbacks (4-5 Star Ratings)'
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(context) {
-                      var label = context.label || '';
-                      if (label) {
-                        label += ': ';
-                      }
-                      label += context.formattedValue + ' positive feedbacks';
-                      return label;
-                    }
-                  }
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
                 }
-              }
             }
-          });
-        }
-      } catch (error) {
-        console.error('Pie Chart creation error:', error);
-      }
+        });
+
+        // Refresh icons
+        lucide.createIcons();
     });
-  </script>
-{% endblock %}
+</script>
 {% endblock %}

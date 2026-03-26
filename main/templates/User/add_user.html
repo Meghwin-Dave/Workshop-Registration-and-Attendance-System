@@ -1,120 +1,153 @@
-{% extends 'base.html' %}
-
+{% extends 'base_new.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
 
-{% block title %}
-  {{ heading }}
-{% endblock %}
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+{% block title %}{{ heading }} | WSRA{% endblock %}
 
 {% block content %}
-  {% if show_flag %}
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-      <h1 class="h3 mb-0 text-gray-800">{{ heading }}</h1>
-      <a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-success" data-toggle="modal" data-target="#changepasswordmodal" style="color:white">Change User Password</a>
-
-    </div>
-
-    <div class="modal fade" id="changepasswordmodal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg"> <!-- Added modal-lg for a larger modal -->
-            <form id="changepasswordForm" class="user" method="post">
-              {% csrf_token %}
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="groupSettingsModalLabel">Group Settings</h5>
-                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <label for="New Password" id="label_New Password">New Password</label>
-                            <input type="text" id="New Password" name="password" value="" class="form-control form-control-user textinput textInput col col-md-8">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal" id="closegroup">Close</button>
-                        <input type="submit" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Save" style="color:white" />
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="card">
-      <div class="card-body">
-        <form method="POST" class="user" enctype="multipart/form-data">
-          {% csrf_token %} {% crispy form %}
-          
-          <h3 class="text-danger">{{ message }}</h3>
-
-          <div class="d-sm-flex align-items-center mb-4">
-            <input type="submit" style="color:white;" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Submit"/>  {% comment %} style="background-color: {{ primary }}; color:{{ secondary }}" {% endcomment %}
+<div class="max-w-2xl mx-auto" x-data="{ 
+    showPasswordModal: false,
+    newPassword: '',
+    submitting: false,
     
-            <a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-danger" data-toggle="modal" data-target="#backtolistmodal" style="color:white">Back to List</a>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal fade" id="backtolistmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-body" style="display:flex; justify-content: center;align-items: center;">
-            Are you sure you want to go back?
-          </div>
-          <div class="modal-footer" style="display:flex;justify-content: space-between;">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <a class="btn btn-danger" href="{{request.META.HTTP_REFERER}}">Back to List</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-   
-  
-  
-  
-
-    <!-- Page level plugins -->
-    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="{% static 'js/demo/datatables-demo.js' %}"></script>
-
-    <script>
-        $(document).ready(function() {
-            // Handle form submission
-            $('#changepasswordForm').submit(function(e) {
-                e.preventDefault(); // Prevent the default form submission
-                var formData = $(this).serialize();
-                
-                // Perform the AJAX request
-                $.ajax({
-                    url: '../change_password/{{user_id}}', // Your target URL
-                    type: 'POST',
-                    data: formData, // Send the serialized form data
-                    success: function(response) {
-                        // Handle the success response (e.g., show a success message, close modal)
-                        $('#closegroup').click();
-                        alert('Password Changed Successfully!');
-                    },
-                    error: function(xhr, status, error) {
-                        // Handle the error response (e.g., show an error message)
-                        console.error('Error occurred:', error);
-                        alert('Failed to save data. Please try again.');
-                    }
-                });
+    changePassword() {
+        if (!this.newPassword) return;
+        this.submitting = true;
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('password', this.newPassword);
+        
+        fetch('../change_password/{{ user_id }}', { method: 'POST', body: formData })
+            .then(() => {
+                alert('Password Changed Successfully!');
+                this.showPasswordModal = false;
+                this.newPassword = '';
+                this.submitting = false;
+            })
+            .catch(() => {
+                alert('Failed to change password.');
+                this.submitting = false;
             });
-        });
-        </script>
-
-
+    }
+}">
     
-  {% else %}
-    <h1>Your are not accesible to this page</h1>
-  {% endif %}
+    {% if show_flag %}
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">{{ heading }}</h1>
+            <p class="text-slate-500 text-sm mt-1">Configure user profile and access permissions.</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button @click="showPasswordModal = true" class="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl hover:bg-emerald-100 transition-all shadow-sm">
+                <i data-lucide="key" class="w-4 h-4 mr-2"></i>
+                Change Password
+            </button>
+        </div>
+    </div>
 
-  
+    <!-- Form Card -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+        <form method="POST" enctype="multipart/form-data" class="p-8 md:p-12">
+            {% csrf_token %}
+            
+            {% if message %}
+                <div class="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 font-bold text-sm">
+                    {{ message }}
+                </div>
+            {% endif %}
+
+            <div class="space-y-6">
+                <!-- We'll target the crispy form with CSS to make it look SaaS -->
+                <div class="space-y-4">
+                    {% for field in form %}
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <p class="text-xs text-rose-500 mt-1">{{ field.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="mt-12 pt-8 border-t border-slate-100 flex items-center justify-end space-x-4">
+                <a href="{% url 'show_users' %}" class="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</a>
+                <button type="submit" class="px-12 py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl shadow-primary-200 hover:bg-primary-700 transition-all">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div x-show="showPasswordModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showPasswordModal = false" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-slate-900">Change Password</h3>
+                <button @click="showPasswordModal = false" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-4 h-4 text-slate-400"></i>
+                </button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">New Password</label>
+                    <input type="password" x-model="newPassword" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Enter new password...">
+                </div>
+                <button @click="changePassword" :disabled="!newPassword || submitting" class="w-full py-4 bg-primary-600 text-white font-bold rounded-xl shadow-lg shadow-primary-100 hover:bg-primary-700 transition-all disabled:opacity-50 flex items-center justify-center">
+                    <template x-if="!submitting"><span>Update Password</span></template>
+                    <template x-if="submitting">
+                         <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </template>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="bg-white rounded-[2.5rem] p-20 text-center space-y-6 shadow-sm border border-slate-100">
+        <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+            <i data-lucide="shield-alert" class="w-10 h-10"></i>
+        </div>
+        <h2 class="text-2xl font-black text-slate-900">Not Accessible</h2>
+        <p class="text-slate-500 max-w-sm mx-auto">You do not have permission to manage users.</p>
+        <div class="pt-4">
+            <a href="/" class="inline-flex items-center font-bold text-primary-600 hover:text-primary-700">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    input[type="text"], input[type="email"], input[type="password"], select, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        outline: none;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
 {% endblock %}

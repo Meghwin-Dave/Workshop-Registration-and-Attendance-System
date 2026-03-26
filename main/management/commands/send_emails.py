@@ -39,6 +39,7 @@ class Command(BaseCommand):
     <meta charset="UTF-8">
 </head>
 <body style="font-family: 'Quire Sans', sans-serif; line-height: 1.6; color: #000000; padding: 20px;">
+    <p style="margin: 16px 0;color: #000000;">Dear {visitor.first_name or 'Participant'},</p>
     <p style="margin: 16px 0;color: #000000;">Thank you for registering for our upcoming workshop. We are thrilled to have you with us and look forward to an engaging and informative session.</p>
 
     <p style="margin: 16px 0;color: #000000;">Please click the link below to get your ticket and find <span style="color: #FF0000; font-weight: bold;">your seating arrangement</span> and <span style="color: #FF0000; font-weight: bold;">assigned group name</span> for the event:</p>

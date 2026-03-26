@@ -4,180 +4,215 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Live Poll - {{ workshop.workshop_name }}</title>
-    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,700" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>Live Poll | {{ workshop.workshop_name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fc; }
-        .poll-container { max-width: 600px; margin: 50px auto; padding: 20px; }
-        .option-card { cursor: pointer; transition: all 0.2s; border-left: 5px solid transparent; }
-        .option-card:hover { transform: translateX(5px); background-color: #f1f3f9; }
-        .option-card.selected { border-left-color: #4e73df; background-color: #eaecf4; }
+        body { font-family: 'Inter', sans-serif; }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body>
-    <div class="container poll-container">
-        <div class="text-center mb-4">
-            {% if workshop.workshop_logo %}
-                <img src="{{ workshop.workshop_logo.url }}" alt="Logo" style="max-height: 80px;" class="mb-3">
-            {% endif %}
-            <h2 class="h4 text-gray-900">{{ workshop.workshop_name }}</h2>
-            <p class="text-muted">Live Workshop Poll</p>
-        </div>
+<body class="bg-slate-900 min-h-screen p-4 md:p-8 flex flex-col items-center">
 
-        <div id="poll-content" class="card shadow">
-            <div class="card-body py-5 text-center" id="loading">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Loading poll...</span>
-                </div>
-                <p class="mt-2">Waiting for an active poll...</p>
-            </div>
+    <div class="max-w-xl w-full" x-data="{
+        workshopUuid: '{{ workshop.workshop_uuid }}',
+        visitorUuid: '{{ visitor.WorkshopVisitors_uuid }}',
+        active: false,
+        hasVoted: false,
+        question: '',
+        options: [],
+        pollId: null,
+        loading: true,
+        submitting: false,
+        selectedOption: null,
+        chart: null,
 
-            <div id="no-poll" class="card-body py-5 text-center d-none">
-                <i class="fas fa-poll-h fa-3x text-gray-300 mb-3"></i>
-                <h4 class="text-gray-500">No active poll at the moment</h4>
-                <p>Please wait for the presenter to start a poll.</p>
-            </div>
+        checkPoll() {
+            fetch(`/api/live-poll/${this.workshopUuid}/?visitor_uuid=${this.visitorUuid}`)
+                .then(r => r.json())
+                .then(data => {
+                    this.loading = false;
+                    this.active = data.active;
+                    if (!data.active) return;
+                    
+                    this.pollId = data.poll_id;
+                    this.question = data.question;
+                    this.options = data.options;
+                    this.hasVoted = data.has_voted;
 
-            <div id="voting-area" class="card-body d-none">
-                <h3 id="question" class="h5 font-weight-bold text-gray-800 mb-4 text-center"></h3>
-                <div id="options-list">
-                    <!-- Options will be injected here -->
-                </div>
-                <button id="submit-vote" class="btn btn-primary btn-block mt-4" disabled>Submit Vote</button>
-            </div>
+                    if (this.hasVoted) {
+                        this.$nextTick(() => this.updateChart());
+                    }
+                });
+        },
 
-            <div id="results-area" class="card-body d-none text-center">
-                <h3 id="result-question" class="h5 font-weight-bold text-gray-800 mb-4"></h3>
-                <div class="alert alert-success py-2">Your vote has been recorded!</div>
-                <div style="height: 300px;">
-                    <canvas id="resultsChart"></canvas>
-                </div>
-                <p class="small text-muted mt-3">Results update live as others vote.</p>
-            </div>
-        </div>
-        
-        <div class="text-center mt-4">
-            <p class="small text-gray-500">Logged in as: {{ visitor.first_name }} {{ visitor.last_name }}</p>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        const workshopUuid = "{{ workshop.workshop_uuid }}";
-        const visitorUuid = "{{ visitor.WorkshopVisitors_uuid }}";
-        let selectedOptionId = null;
-        let resultsChart = null;
-        let currentPollId = null;
-
-        function checkPoll() {
-            $.getJSON(`/api/live-poll/${workshopUuid}/?visitor_uuid=${visitorUuid}`, function(data) {
-                $('#loading').addClass('d-none');
-                
-                if (!data.active) {
-                    $('#no-poll').removeClass('d-none');
-                    $('#voting-area').addClass('d-none');
-                    $('#results-area').addClass('d-none');
-                    currentPollId = null;
-                    return;
-                }
-
-                $('#no-poll').addClass('d-none');
-                currentPollId = data.poll_id;
-
-                if (data.has_voted) {
-                    $('#voting-area').addClass('d-none');
-                    $('#results-area').removeClass('d-none');
-                    $('#result-question').text(data.question);
-                    updateResultsChart(data.options);
-                } else {
-                    $('#results-area').addClass('d-none');
-                    $('#voting-area').removeClass('d-none');
-                    $('#question').text(data.question);
-                    renderOptions(data.options);
-                }
-            });
-        }
-
-        function renderOptions(options) {
-            const list = $('#options-list');
-            list.empty();
-            options.forEach(opt => {
-                list.append(`
-                    <div class="card option-card mb-2 shadow-sm" data-option-id="${opt.id}">
-                        <div class="card-body py-3">
-                            ${opt.option_text}
-                        </div>
-                    </div>
-                `);
-            });
-        }
-
-        $(document).on('click', '.option-card', function() {
-            $('.option-card').removeClass('selected');
-            $(this).addClass('selected');
-            selectedOptionId = $(this).data('option-id');
-            $('#submit-vote').prop('disabled', false);
-        });
-
-        $('#submit-vote').click(function() {
-            if (!selectedOptionId || !currentPollId) return;
+        submitVote() {
+            if (!this.selectedOption) return;
+            this.submitting = true;
             
-            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Submitting...');
-
-            $.ajax({
-                url: `/api/poll-vote/${currentPollId}/`,
-                type: 'POST',
-                data: JSON.stringify({
-                    visitor_uuid: visitorUuid,
-                    option_id: selectedOptionId
-                }),
-                contentType: 'application/json',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-                success: function() {
-                    checkPoll();
+            fetch(`/api/poll-vote/${this.pollId}/`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
-                error: function(xhr) {
-                    alert(xhr.responseJSON.error || 'Error submitting vote');
-                    $('#submit-vote').prop('disabled', false).text('Submit Vote');
-                }
+                body: JSON.stringify({
+                    visitor_uuid: this.visitorUuid,
+                    option_id: this.selectedOption
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.submitting = false;
+                this.checkPoll();
             });
-        });
+        },
 
-        function updateResultsChart(options) {
-            const labels = options.map(o => o.option_text);
-            const data = options.map(o => o.vote_count);
+        updateChart() {
+            const ctx = document.getElementById('pollResultsChart')?.getContext('2d');
+            if (!ctx) return;
 
-            if (!resultsChart) {
-                const ctx = document.getElementById('resultsChart').getContext('2d');
-                resultsChart = new Chart(ctx, {
+            const labels = this.options.map(o => o.option_text);
+            const counts = this.options.map(o => o.vote_count);
+
+            if (this.chart) {
+                this.chart.data.labels = labels;
+                this.chart.data.datasets[0].data = counts;
+                this.chart.update();
+            } else {
+                this.chart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Votes',
-                            data: data,
-                            backgroundColor: '#4e73df',
+                            data: counts,
+                            backgroundColor: '#6366f1',
+                            borderRadius: 12,
+                            borderSkipped: false,
                         }]
                     },
                     options: {
                         indexAxis: 'y',
+                        responsive: true,
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
-                        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                        scales: {
+                            x: { grid: { display: false }, ticks: { display: false }, border: { display: false } },
+                            y: { grid: { display: false }, border: { display: false }, ticks: { font: { weight: 'bold' }, color: '#94a3b8' } }
+                        }
                     }
                 });
-            } else {
-                resultsChart.data.labels = labels;
-                resultsChart.data.datasets[0].data = data;
-                resultsChart.update('none');
             }
         }
+    }" x-init="checkPoll(); setInterval(() => checkPoll(), 5000)">
 
-        // Poll for poll status every 5 seconds
-        checkPoll();
-        setInterval(checkPoll, 5000);
+        <!-- Header -->
+        <div class="text-center mb-8 space-y-4">
+             {% if workshop.workshop_logo %}
+                <img src="{{ workshop.workshop_logo.url }}" class="h-12 mx-auto brightness-0 invert opacity-80">
+            {% else %}
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-500/20">
+                    <i data-lucide="bar-chart-2" class="w-6 h-6 text-white"></i>
+                </div>
+            {% endif %}
+            <h1 class="text-2xl font-black text-white tracking-tight italic uppercase">{{ workshop.workshop_name }}</h1>
+            <div class="inline-flex items-center px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-2 animate-pulse"></span>
+                Live Workshop Poll
+            </div>
+        </div>
+
+        <div class="bg-slate-800/50 backdrop-blur-xl rounded-[2.5rem] border border-slate-700/50 shadow-2xl overflow-hidden min-h-[400px]">
+            <!-- Loading State -->
+            <div x-show="loading" class="p-20 flex flex-col items-center justify-center space-y-4">
+                <div class="w-10 h-10 border-4 border-slate-700 border-t-indigo-500 rounded-full animate-spin"></div>
+                <p class="text-slate-500 text-sm font-medium">Connecting to live feed...</p>
+            </div>
+
+            <!-- No Active Poll -->
+            <div x-show="!loading && !active" x-transition class="p-12 md:p-20 text-center space-y-6">
+                <div class="w-20 h-20 bg-slate-700/30 rounded-full flex items-center justify-center mx-auto text-slate-600">
+                    <i data-lucide="clock" class="w-10 h-10"></i>
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-xl font-bold text-white">No active poll yet</h3>
+                    <p class="text-slate-400 text-sm">Please wait for the presenter to start a new question. This page will update automatically.</p>
+                </div>
+            </div>
+
+            <!-- Voting Area -->
+            <div x-show="!loading && active && !hasVoted" x-transition class="p-8 md:p-12 space-y-8">
+                <h2 class="text-2xl font-extrabold text-white text-center leading-tight tracking-tight" x-text="question"></h2>
+                
+                <div class="space-y-3">
+                    <template x-for="opt in options" :key="opt.id">
+                        <label class="block cursor-pointer group">
+                            <input type="radio" name="poll_option" :value="opt.id" x-model="selectedOption" class="sr-only">
+                            <div class="p-5 rounded-2xl border-2 transition-all flex items-center justify-between"
+                                 :class="selectedOption == opt.id ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg' : 'bg-slate-700/30 border-slate-700 text-slate-300 hover:border-slate-500'">
+                                <span class="font-bold" x-text="opt.option_text"></span>
+                                <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                                     :class="selectedOption == opt.id ? 'bg-white border-white' : 'border-slate-500 group-hover:border-slate-400'">
+                                    <template x-if="selectedOption == opt.id">
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-indigo-600 stroke-[4px]"></i>
+                                    </template>
+                                </div>
+                            </div>
+                        </label>
+                    </template>
+                </div>
+
+                <button @click="submitVote" :disabled="!selectedOption || submitting" class="w-full py-5 bg-indigo-600 text-white font-black rounded-3xl shadow-2xl shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    <template x-if="!submitting">
+                        <span>Cast My Vote</span>
+                    </template>
+                    <template x-if="submitting">
+                        <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </template>
+                </button>
+            </div>
+
+            <!-- Results Area -->
+            <div x-show="!loading && active && hasVoted" x-transition class="p-8 md:p-12 space-y-8">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 mb-2">
+                        Vote Recorded
+                    </div>
+                    <h2 class="text-xl font-extrabold text-white leading-tight" x-text="question"></h2>
+                </div>
+
+                <div class="h-64 relative">
+                    <canvas id="pollResultsChart"></canvas>
+                </div>
+
+                <div class="p-6 bg-slate-700/30 rounded-3xl border border-slate-700 text-center">
+                    <p class="text-slate-400 text-xs font-medium">Results are updating live as other participants cast their votes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center space-y-2">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Authenticated as: <span class="text-slate-300">{{ visitor.first_name }} {{ visitor.last_name }}</span>
+            </p>
+            <div class="flex items-center justify-center space-x-2 text-[9px] font-bold text-slate-600 uppercase tracking-[0.2em]">
+                <i data-lucide="shield-check" class="w-3 h-3"></i>
+                <span>Secure Participation</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>

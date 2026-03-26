@@ -34,7 +34,8 @@ class Command(BaseCommand):
                     poll_url = f"{config.base_url}/poll/{visitor.WorkshopVisitors_uuid}/"
                     
                     subject = f"Live Poll: {active_poll.question}"
-                    message = f"""Dear {visitor.name},
+                    first_name = visitor.first_name or "Guest"
+                    message = f"""Dear {first_name},
 
 We have a live poll running for the workshop '{workshop.workshop_name}'.
 Your opinion matters! Please vote by clicking the link below:

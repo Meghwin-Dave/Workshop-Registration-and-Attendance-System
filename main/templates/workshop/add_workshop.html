@@ -1,399 +1,303 @@
-{% extends 'base.html' %}
-
-{% load crispy_forms_tags %}
+{% extends 'base_new.html' %}
 {% load static %}
 
-{% block title %}
-	{{ heading }}
-{% endblock %}
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+{% block title %}{{ heading }} | WSRA{% endblock %}
 
 {% block content %}
-	{% if show_flag %}
-	<div>
-		<div class="d-sm-flex align-items-center justify-content-between mb-4">
-			<h1 class="h3 mb-0">{{ heading }}</h1>
-		</div>
+<div class="max-w-5xl mx-auto" x-data="{ 
+    showGroups: false, 
+    showDesignations: false,
+    groups: [],
+    designations: [],
+    
+    loadGroups() {
+        this.showGroups = true;
+        fetch('../save_group_details/{{ workshop_id }}')
+            .then(r => r.json())
+            .then(data => {
+                this.groups = data.length > 0 ? data : Array.from({length: parseInt(document.getElementById('id_number_workshop_groups').value)}, (_, i) => ({group_name: '', tables: ''}));
+            });
+    },
+    
+    saveGroups() {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        this.groups.forEach((g, i) => {
+            formData.append(`group_name_${i+1}`, g.group_name);
+            formData.append(`tables_${i+1}`, g.tables);
+        });
+        
+        fetch('../save_group_details/{{ workshop_id }}', { method: 'POST', body: formData })
+            .then(() => {
+                alert('Group settings saved!');
+                this.showGroups = false;
+            });
+    },
 
-		<div class="card">
-			<div class="card-body">
-				<form method="POST" class="user" enctype="multipart/form-data">
-					{% csrf_token %} {% crispy form %}
-					
-					<h3 class="text-danger">{{ message }}</h3>
+    loadDesignations() {
+        this.showDesignations = true;
+        fetch('../save_designation_details/{{ workshop_id }}/')
+            .then(r => r.json())
+            .then(data => {
+                this.designations = data.length > 0 ? data : [{designation_name: '', designation_tables: ''}];
+            });
+    },
 
-					<div class="d-sm-flex align-items-center mb-4">
-						<input type="submit" style="color:white;" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Submit"/>  
-						
-						
-						{% if is_edit %}
-							{% if not is_closed %}
-							<a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-success" id="groupsettingsbtn" data-toggle="modal" data-target="#workshopgroupsmodal" style="color:white">Groups Settings</a>
-							{% if  is_designation_required%}<a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-success" id="designationSettings" data-toggle="modal" data-target="#designationSettingsModal" style="color:white;">Designation Settings</a>{% endif %}
-							<a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-warning" href="../close_workshop/{{workshop_id}}" style="color:white">Close Workshop</a>
+    saveDesignations() {
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        this.designations.forEach((d, i) => {
+            formData.append(`designation_name_${i+1}`, d.designation_name);
+            formData.append(`designation_tables_${i+1}`, d.designation_tables);
+        });
+        
+        fetch('../save_designation_details/{{ workshop_id }}/', { method: 'POST', body: formData })
+            .then(() => {
+                alert('Designation settings saved!');
+                this.showDesignations = false;
+            });
+    }
+}">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ heading }}</h1>
+            <p class="text-slate-500 text-sm mt-1">Configure your workshop details, logistics, and branding.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'show_workshop' %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
+                <i data-lucide="list" class="w-4 h-4 mr-2"></i>
+                Workshop List
+            </a>
+            {% if is_edit %}
+                {% if is_closed %}
+                    <a href="{% url 'send_feedback_emails' workshop_id %}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all">
+                        <i data-lucide="message-square" class="w-4 h-4 mr-2"></i>
+                        Feedback Results
+                    </a>
+                {% else %}
+                    <a href="../close_workshop/{{workshop_id}}" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-xl shadow-lg shadow-amber-100 hover:bg-amber-600 transition-all">
+                        <i data-lucide="lock" class="w-4 h-4 mr-2"></i>
+                        Close Workshop
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
 
-							{% endif %}
-						{% endif %}
-						
-						{% if is_closed %}
-						
-						 <a href="{% url 'send_feedback_emails' workshop_id %}" class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-primary" style="color:white" >Feedback</a>
+    <!-- Main Form Card -->
+    <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+        <form method="POST" enctype="multipart/form-data" class="p-8 md:p-12">
+            {% csrf_token %}
+            
+            {% if message %}
+                <div class="mb-8 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 font-bold text-sm">
+                    {{ message }}
+                </div>
+            {% endif %}
 
-						{% endif %}
-						
-						<a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-danger" data-toggle="modal" data-target="#backtolistmodal" style="color:white">Back to List</a>
-					</div>
-					
-				</form>
-			</div>
-		</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Left Column: Basic Info -->
+                <div class="space-y-8">
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i data-lucide="info" class="w-5 h-5 mr-3 text-primary-500"></i>
+                            General Information
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            {% for field in form %}
+                                {% if field.name != 'workshop_logo' and field.name != 'company_logo' and field.name != 'workshop_description' %}
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">{{ field.label }}</label>
+                                    <div class="relative">
+                                        {{ field }}
+                                        {% if field.errors %}
+                                            <p class="text-xs text-rose-500 mt-1">{{ field.errors.0 }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
 
-		<div class="modal fade" id="backtolistmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog" role="document">
-				<div class="modal-content">
-					<div class="modal-body" style="display:flex; justify-content: center;align-items: center;">
-						Are you sure you want to go back?
-					</div>
-					<div class="modal-footer" style="display:flex;justify-content: space-between;">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						<a class="btn btn-danger" href="{{request.META.HTTP_REFERER}}">Back to List</a>
-					</div>
-				</div>
-			</div>
-		</div>
-		{% comment %} group setting {% endcomment %}
-		<div class="modal fade" id="workshopgroupsmodal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg"> <!-- Added modal-lg for a larger modal -->
-					<form id="workshopForm" class="user" method="post"> <!-- Removed action -->
-						{% csrf_token %}
-							<div class="modal-content">
-									<div class="modal-header">
-											<h5 class="modal-title" id="groupSettingsModalLabel">Group Settings</h5>
-											<button type="button"  class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-									</div>
-									<div class="modal-body">
-											<div id="groupsettings" class="container-fluid"></div> <!-- Ensure it's a fluid container -->
-									</div>
-									<div class="modal-footer">
-											<button type="button" class="btn btn-danger" data-dismiss="modal" id="closegroup">Close</button>
-											<input type="submit" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Save" style="color:white" />
-									</div>
-							</div>
-					</form>
-			</div>
-		</div>
-		<!-- Designation Settings Modal -->
-		 <div class="modal fade" id="designationSettingsModal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<form id="designationForm" class="user" method="post" >
-					{% csrf_token %}
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title" id="designationSettingsModalLabel">Designation Settings</h5>
-							<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div id="designationsettings" class="container-fluid">
-								<!--  dynamically added here -->
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i data-lucide="align-left" class="w-5 h-5 mr-3 text-primary-500"></i>
+                            Description
+                        </h3>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Detailed Overview</label>
+                            {{ form.workshop_description }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Branding & Advanced Settings -->
+                <div class="space-y-8">
+                    <div class="space-y-6 p-8 bg-slate-50 rounded-[2rem] border border-slate-100/50">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i data-lucide="palette" class="w-5 h-5 mr-3 text-primary-500"></i>
+                            Branding & Media
+                        </h3>
+                        
+                        <div class="space-y-6">
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Workshop Banner/Logo</label>
+                                {{ form.workshop_logo }}
                             </div>
-                            <div class="text-center mt-3">
-								<button type="button" id="addDesignationBtn" class="btn btn-primary">+ Add Designation</button>
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Logo</label>
+                                {{ form.company_logo }}
                             </div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-danger" data-dismiss="modal" id="closedesignation">Close</button>
-							<input type="submit" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Save" style="color:white" />
-						</div>
-					 </div>
-				</form>
+                        </div>
+                    </div>
+
+                    {% if is_edit and not is_closed %}
+                    <div class="space-y-6">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3 text-primary-500"></i>
+                            Advanced Configuration
+                        </h3>
+                        <div class="grid grid-cols-1 gap-4">
+                            <button type="button" @click="loadGroups()" class="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl hover:border-primary-500 hover:shadow-lg transition-all text-left">
+                                <div class="flex items-center space-x-4">
+                                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                                        <i data-lucide="users" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900">Group Settings</p>
+                                        <p class="text-xs text-slate-400">Manage table allotments per group.</p>
+                                    </div>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300"></i>
+                            </button>
+
+                            <button type="button" @click="loadDesignations()" class="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl hover:border-primary-500 hover:shadow-lg transition-all text-left">
+                                <div class="flex items-center space-x-4">
+                                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                                        <i data-lucide="tag" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900">Designation Settings</p>
+                                        <p class="text-xs text-slate-400">Define custom attendee roles.</p>
+                                    </div>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-		</div>
-			
-	</div>
-	
-	
-		<!-- Page level plugins -->
-		<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
-		<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
+            <!-- Form Footer -->
+            <div class="mt-12 pt-8 border-t border-slate-100 flex items-center justify-end space-x-4">
+                <a href="{% url 'show_workshop' %}" class="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</a>
+                <button type="submit" class="px-12 py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl shadow-primary-200 hover:bg-primary-700 transition-all">
+                    {% if is_edit %}Save Changes{% else %}Create Workshop{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
 
+    <!-- Modals (Alpine.js) -->
+    <!-- Group Settings Modal -->
+    <div x-show="showGroups" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showGroups = false" class="bg-white rounded-[2.5rem] shadow-2l w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Group Settings</h3>
+                <button @click="showGroups = false" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-8 max-h-[60vh] overflow-y-auto space-y-6">
+                <template x-for="(group, index) in groups" :key="index">
+                    <div class="grid grid-cols-2 gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="'Group ' + (index+1) + ' Name'"></label>
+                            <input type="text" x-model="group.group_name" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none text-sm">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="'Tables (e.g. 1-10)'"></label>
+                            <input type="text" x-model="group.tables" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none text-sm">
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
+                <button @click="showGroups = false" class="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl">Cancel</button>
+                <button @click="saveGroups()" class="px-8 py-2.5 text-sm font-bold text-white bg-primary-600 rounded-xl shadow-lg shadow-primary-100">Save Group Plan</button>
+            </div>
+        </div>
+    </div>
 
-		<script>
-			$("#id_number_workshop_groups").change(function() {
-				var groupCount = parseInt($("#id_number_workshop_groups").val());
-				var currentGroupCount = $("#groupsettings .row").length; // Count existing group rows
+    <!-- Designation Settings Modal -->
+    <div x-show="showDesignations" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" x-cloak x-transition>
+        <div @click.away="showDesignations = false" class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="px-8 py-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-slate-900">Designation Settings</h3>
+                <button @click="showDesignations = false" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-8 max-h-[60vh] overflow-y-auto space-y-4">
+                <template x-for="(des, index) in designations" :key="index">
+                    <div class="flex items-end space-x-3 group">
+                        <div class="flex-grow grid grid-cols-2 gap-4 p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Designation</label>
+                                <input type="text" x-model="des.designation_name" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none text-sm">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tables</label>
+                                <input type="text" x-model="des.designation_tables" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none text-sm">
+                            </div>
+                        </div>
+                        <button type="button" @click="designations.splice(index, 1)" class="p-4 text-slate-300 hover:text-red-500 transition-colors">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </template>
+                <button type="button" @click="designations.push({designation_name: '', designation_tables: ''})" class="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-sm hover:border-primary-400 hover:text-primary-500 transition-all flex items-center justify-center">
+                    <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                    Add Designation
+                </button>
+            </div>
+            <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
+                <button @click="showDesignations = false" class="px-6 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl">Cancel</button>
+                <button @click="saveDesignations()" class="px-8 py-2.5 text-sm font-bold text-white bg-primary-600 rounded-xl shadow-lg shadow-primary-100">Save Roles</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-				console.log('number_of_groups',groupCount)
-				console.log(currentGroupCount)
-		
-				// If the new group count is greater than the current group count, add more fields
-				if (groupCount > currentGroupCount) {
-						for (var i = currentGroupCount + 1; i <= groupCount; i++) {
-								var groupField = `
-										<div class="row" id="group_${i}">
-												<label for="group_name_${i}" id="label_group_name_${i}">Group Name ${i}:</label>
-												<input type="text" id="group_name_${i}" name="group_name_${i}" class="form-control form-control-user textinput textInput col col-md-8"/>
-												<label for="tables_${i}" id="label_tables_${i}">Tables For Group ${i}:</label>
-												<input type="text" id="tables_${i}" name="tables_${i}" class="form-control form-control-user textinput textInput col col-md-4"/>
-										</div><br id="br_${i}"/>
-								`;
-		
-								// Append the new fields for the additional groups to the groupsettings div
-								$("#groupsettings").append(groupField);
-						}
-				} 
-				// If the new group count is less than the current group count, remove extra fields
+<style>
+    /* Styling for Crispy-like manual fields if needed, or targeting the crispy output */
+    input[type="text"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        outline: none;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    form .form-group {
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
 
-
-				else if (groupCount < currentGroupCount) {
-					console.log("here")
-						for (var i = currentGroupCount; i > groupCount; i--) {
-							console.log(i)
-								// Remove the extra group rows and their <br> tags
-								$("#group_name_" + i).remove();
-								$("#tables_" + i).remove();
-								$("#label_group_name_" + i).remove();
-								$("#label_tables_" + i).remove();
-
-						}
-				}
-			});
-		</script>
-		<script>
-			$(document).ready(function() {
-					// Handle form submission
-					$('#workshopForm').submit(function(e) {
-							e.preventDefault(); // Prevent the default form submission
-			
-							var formData = $(this).serialize(); // Serialize the form data
-							formData_workshop = new FormData();
-		
-							formData_workshop.append('number_of_groups', parseInt($("#id_number_workshop_groups").val()))
-							formData_workshop.append('csrfmiddlewaretoken', $("input[name=csrfmiddlewaretoken]").val())
-			
-							// Perform the AJAX request
-							$.ajax({
-									url: '../save_group_details/{{workshop_id}}', // Your target URL
-									type: 'POST',
-									data: formData, // Send the serialized form data
-									success: function(response) {
-											// Handle the success response (e.g., show a success message, close modal)
-											alert('Data saved successfully!');
-											$('#closegroup').click();
-											$.ajax({
-												url: '../edit_number_of_groups/{{workshop_id}}', // Your target URL
-												type: 'POST',
-												data: formData_workshop, // Send the serialized form data
-												processData: false, // Prevent jQuery from processing data
-												contentType: false,
-												success: function(response) {
-													console.log("called")
-												},
-												error: function(xhr, status, error) {
-													// Handle the error response (e.g., show an error message)
-													console.error('Error occurred:', error);
-													alert('Failed to save data. Please try again.');
-											}
-											});
-									},
-									error: function(xhr, status, error) {
-											// Handle the error response (e.g., show an error message)
-											console.error('Error occurred:', error);
-											alert('Failed to save data. Please try again.');
-									}
-							});
-					});
-					
-				});	
-		</script>
-			<!-- Script to handle form population -->
-		<script type="text/javascript">
-				$(document).ready(function () {
-					// Function to populate existing group details
-					var groupCount = parseInt($("#id_number_workshop_groups").val());
-					function populateGroupFields(details) {
-							$("#groupsettings").empty();  // Clear any existing content
-							console.log("details   ", details)
-							if (details.length === 0){
-								for (var i = 1; i <= groupCount; i++) {
-									var groupField = `
-											<div class="row" id="group_${i}">
-													<label for="group_name_${i}" id="label_group_name_${i}">Group Name ${i}:</label>
-													<input type="text" id="group_name_${i}" name="group_name_${i}" class="form-control form-control-user textinput textInput col col-md-8">
-													<label for="tables_${i}" id="label_tables_${i}">Tables For Group ${i}:</label>
-													<input type="text" id="tables_${i}" name="tables_${i}" class="form-control form-control-user textinput textInput col col-md-4">
-											</div><br id="br_${i}">
-									`;
-			
-									// Append the new fields for the additional groups to the groupsettings div
-									$("#groupsettings").append(groupField);
-							}
-							}
-							else{
-								$.each(details, function (index, group) {
-									var i = index + 1;  // Start counting from 1
-									var groupField = `
-											<div class="row">
-													<label for="group_name_${i}" id="label_group_name_${i}">Group Name ${i}:</label>
-													<input type="text" id="group_name_${i}" name="group_name_${i}" value="${group.group_name}" class="form-control form-control-user textinput textInput col col-md-8">
-													<label for="tables_${i}" id="label_tables_${i}">Tables For Group ${i}:</label>
-													<input type="text" id="tables_${i}" name="tables_${i}" value="${group.tables}" class="form-control form-control-user textinput textInput col col-md-4">
-											</div><br>
-									`;
-									// Append the generated fields to the groupsettings div
-									$("#groupsettings").append(groupField);
-							});
-							}
-							
-					}
-			
-					// Trigger modal load and populate fields with existing data
-					$(document).ready(function (e) {
-							// Clear any existing fields each time the modal is opened
-							$("#groupsettings").empty();  
-			
-							// Fetch fresh data from the API
-							$.ajax({
-									url: '../save_group_details/{{workshop_id}}', // Adjust your API endpoint
-									method: 'GET',
-									success: function (data) {
-											// Assuming data is an array of group objects
-											populateGroupFields(data); // Use the populate function
-									},
-									error: function (error) {
-											console.error("Error fetching workshop groups:", error);
-									}
-							});
-					});
-			
-					// Handle form submission
-				 
-			});
-			
-		</script>
-
-	<!-- designationSettings -->
-	<script>
-		{% comment %} $('#designationSettings').click(function () {
-			console.log('Button clicked!');
-			
-		}); {% endcomment %}
-	
-		$(document).ready(function () {
-			let designationCount = 0;
-	
-			function addDesignationField() {
-				console.l
-				designationCount++;
-				const designationField = `
-					<div class="row mb-3" id="designation_${designationCount}">
-						<div class="col-md-5">
-							<label for="designation_name_${designationCount}">Designation Name:</label>
-							<input type="text" id="designation_name_${designationCount}" 
-								   name="designation_name_${designationCount}" 
-								   class="form-control form-control-user textinput textInput"/>
-						</div>
-						<div class="col-md-5">
-							<label for="designation_tables_${designationCount}">Designation Tables:</label>
-							<input type="text" id="designation_tables_${designationCount}" 
-								   name="designation_tables_${designationCount}" 
-								   class="form-control form-control-user textinput textInput"/>
-						</div>
-						<div class="col-md-2 d-flex align-items-end">
-							<button type="button" class="btn btn-danger remove-designation" 
-									data-id="${designationCount}">Remove</button>
-						</div>
-					</div>`;
-				$("#designationsettings").append(designationField);
-			}
-	
-			$(document).ready(function () {
-				$("#designationsettings").empty();
-				designationCount = 0;
-				console.log(">>>>>>designation")
-	
-				$.ajax({
-					url: '../save_designation_details/{{workshop_id}}/', // Adjust your API endpoint
-					method: 'GET',
-					success: function (data) {
-						console.log(">>>>>Data",data)
-						if (data.length > 0) {
-						console.log(">>>>>Data inside",data)
-							data.forEach(function (designation, index) {
-								designationCount = index + 1;
-								const designationField = `
-									<div class="row mb-3" id="designation_${designationCount}">
-										<div class="col-md-5">
-											<label for="designation_name_${designationCount}">Designation Name:</label>
-											<input type="text" id="designation_name_${designationCount}" 
-												   name="designation_name_${designationCount}" 
-												   value="${designation.designation_name}" 
-												   class="form-control form-control-user textinput textInput"/>
-										</div>
-										<div class="col-md-5">
-											<label for="designation_tables_${designationCount}">Designation Tables:</label>
-											<input type="text" id="designation_tables_${designationCount}" 
-												   name="designation_tables_${designationCount}" 
-												   value="${designation.designation_tables}" 
-												   class="form-control form-control-user textinput textInput"/>
-										</div>
-										<div class="col-md-2 d-flex align-items-end">
-											<button type="button" class="btn btn-danger remove-designation" 
-													data-id="${designationCount}">Remove</button>
-										</div>
-									</div>`;
-								$("#designationsettings").append(designationField);
-							});
-						} else {
-							addDesignationField();
-						}
-					},
-					error: function (error) {
-						console.error("Error fetching workshop designations:", error);
-						addDesignationField();
-					}
-				});
-			});
-	
-			// Add new designation field
-			$(document).on('click', '#addDesignationBtn', function () {
-				addDesignationField();
-			});
-	
-			// Remove designation field
-			$(document).on('click', '.remove-designation', function () {
-				const id = $(this).data('id');
-				$(`#designation_${id}`).remove();
-			});
-	
-			// Handle designation form submission
-			$('#designationForm').submit(function (e) {
-				e.preventDefault();
-				const formData = $(this).serialize();
-	
-				$.ajax({
-					url: '../save_designation_details/{{workshop_id}}/',
-					type: 'POST',
-					data: formData,
-					success: function () {
-						alert('Designation details saved successfully!');
-						$('#closedesignation').click();
-					},
-					error: function (xhr, status, error) {
-						console.error('Error occurred:', error);
-						alert('Failed to save designation details. Please try again.');
-					}
-				});
-			});
-		});
-	</script>
-	
-		
-	{% else %}
-		<h1>Your are not accesible to this page</h1>
-	{% endif %}
-
-	
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+    });
+</script>
 {% endblock %}

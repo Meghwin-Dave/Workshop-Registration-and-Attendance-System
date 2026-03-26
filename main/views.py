@@ -1,4 +1,5 @@
 from email.mime.image import MIMEImage
+from xhtml2pdf import pisa
 from django.shortcuts import render
 from django.contrib.auth.models import User, auth
 from django.shortcuts import redirect, render, reverse
@@ -101,6 +102,8 @@ def logout(request):
 def home(request):
     total_workshops = Workshop.objects.count()
     total_visitors = WorkshopVisitors.objects.count()
+    total_checked_in = WorkshopVisitors.objects.filter(is_visited=True).count()
+    total_feedback = Feedback.objects.count()
     
     # Get the current year
     current_year = timezone.now().year
@@ -139,23 +142,20 @@ def home(request):
     for item in workshops_positive_feedback:
         workshop_names.append(item['workshop__workshop_name'])
         positive_feedback_counts.append(item['positive_feedback_count'])
-    
-    # JSON serialize the lists
-    months_json = json.dumps(months)
-    workshop_counts_json = json.dumps(workshop_counts)
-    workshop_names_json = json.dumps(workshop_names)
-    positive_feedback_counts_json = json.dumps(positive_feedback_counts)
-    
-    context = {
-        'total_workshops': total_workshops,
-        'total_visitors': total_visitors,
-        'months': months_json,  
-        'workshop_counts': workshop_counts_json,
-        'workshop_names': workshop_names_json,
-        'positive_feedback_counts': positive_feedback_counts_json,
-    }
-    return render(request, "home.html", context)
 
+    context = {
+        "dashboard_key": True,
+        "total_workshops": total_workshops,
+        "total_visitors": total_visitors,
+        "total_checked_in": total_checked_in,
+        "total_feedback": total_feedback,
+        "months": json.dumps(months),
+        "workshop_counts": json.dumps(workshop_counts),
+        "workshop_names": json.dumps(workshop_names),
+        "positive_feedback_counts": json.dumps(positive_feedback_counts),
+    }
+
+    return render(request, "home.html", context)
 
 # Workshop Views
 @login_required(login_url="../login/")
@@ -941,11 +941,17 @@ def download_ticket(request, id):
                 img_tag['src'] = f"data:image/png;base64,{img_base64}"
         # Get the modified HTML
         modified_html = str(soup)
-        # Prepare the response as an HTML file download
-        download_response = HttpResponse(modified_html, content_type='text/html')
-        download_response['Content-Disposition'] = f'attachment; filename="page_{id}.html"'
+        # Generate PDF using xhtml2pdf
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="ticket_{id}.pdf"'
         
-        return download_response
+        # Create PDF
+        pisa_status = pisa.CreatePDF(modified_html, dest=response)
+        
+        if pisa_status.err:
+            return HttpResponse(f"Error generating PDF: {pisa_status.err}", status=500)
+            
+        return response
     
     except requests.exceptions.RequestException as e:
         return HttpResponse(f"Error fetching the URL: {e}", status=500)
@@ -1139,7 +1145,7 @@ def send_emails(request, workshop_id):
         # Trigger email sending
         # command = ["/home/ubuntu/icretegy-wsra/wenv/bin/python3", "manage.py", "send_emails", str(workshop_id)]
         # command = ["/home/enviroer/virtualenv/icretegy-wsra/3.8/bin/python", "manage.py", "send_emails", str(workshop_id)]
-        command = ["python", "manage.py", "close_workshop", str(workshop_id)]
+        command = ["python", "manage.py", "send_emails", str(workshop_id)]
         subprocess.Popen(command)
 
         # Set session flag to indicate emails are being sent
@@ -1505,7 +1511,8 @@ def send_poll_emails(request, workshop_id):
                 poll_url = f"{config.base_url}/poll/{visitor.WorkshopVisitors_uuid}/"
 
             subject = f"Live Poll: {active_poll.question}"
-            message = f"Dear {visitor.name},\n\nWe have a live poll running for '{workshop.workshop_name}'. Please vote here:\n\n{poll_url}\n\nRegards,\nTeam"
+            first_name = visitor.first_name or "Guest"
+            message = f"Dear {first_name},\n\nWe have a live poll running for '{workshop.workshop_name}'. Please vote here:\n\n{poll_url}\n\nRegards,\nTeam"
 
             send_mail(
                 subject,

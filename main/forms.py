@@ -118,7 +118,6 @@ class AddWorkshopForm(ModelForm):
         
         required_fields = [
             "workshop_location", 
-            "workshop_date", 
             "workshop_name", 
             "workshop_start_date", 
             "workshop_end_date"
@@ -132,10 +131,15 @@ class AddWorkshopForm(ModelForm):
 
         # Configure date fields
         self.fields['workshop_description'].widget.attrs.update({'rows': '1'})
-        self.fields['workshop_start_date'].widget.attrs.update({'id': 'datepicker1', 'autocomplete': 'on'})
-        self.fields['workshop_start_date'].input_formats = ['%Y-%m-%d']
-        self.fields['workshop_end_date'].widget.attrs.update({'id': 'datepicker2', 'autocomplete': 'on'})
-        self.fields['workshop_end_date'].input_formats = ['%Y-%m-%d']
+        
+        self.fields['workshop_start_date'].widget = forms.DateTimeInput(
+            attrs={'class': 'form-control', 'type': 'datetime-local'},
+            format='%Y-%m-%dT%H:%M'
+        )
+        self.fields['workshop_end_date'].widget = forms.DateTimeInput(
+            attrs={'class': 'form-control', 'type': 'datetime-local'},
+            format='%Y-%m-%dT%H:%M'
+        )
 
         # No additional classes for checkbox
         self.fields['is_designation_required'].widget.attrs.update({'class': ''})
@@ -349,7 +353,7 @@ class AddWorkshopVisitorForm(forms.ModelForm):
         required=True
     )
     is_presenter = forms.ChoiceField(
-        choices=[('', 'Select'), (True, 'Yes'), (False, 'No')],
+        choices=[('', 'Select'), ('True', 'Yes'), ('False', 'No')],
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=True,
         label="Are you a Presenter?"
@@ -410,7 +414,7 @@ class AddWorkshopVisitorForm(forms.ModelForm):
         instance = super().save(commit=False)
         prefix, first_name = self.cleaned_data['prefix_first_name']
         instance.first_name = f"{prefix} {first_name}"
-        instance.is_presenter = self.cleaned_data['is_presenter']
+        instance.is_presenter = (self.cleaned_data['is_presenter'] == 'True')
         if 'designation_text' in self.cleaned_data:
             instance.designation_text = self.cleaned_data['designation_text']
         elif 'designation' in self.cleaned_data:

@@ -1,0 +1,20 @@
+{% if w_id %}
+<div class="pt-4 px-2 py-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Workshop Tools</div>
+
+<a href="{% url 'live_dashboard' w_id %}" class="flex items-center px-4 py-2.5 text-sm font-medium transition-colors rounded-xl hover:bg-slate-50 {% if 'live-dashboard' in request.path %}bg-primary-50 text-primary-600{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+    <i data-lucide="activity" class="w-5 h-5 mr-3"></i>
+    Live Monitoring
+</a>
+<a href="{% url 'poll_management' w_id %}" class="flex items-center px-4 py-2.5 text-sm font-medium transition-colors rounded-xl hover:bg-slate-50 {% if 'polls' in request.path %}bg-primary-50 text-primary-600{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+    <i data-lucide="vote" class="w-5 h-5 mr-3"></i>
+    Live Polls
+</a>
+<a href="{% url 'leaderboard' w_id %}" class="flex items-center px-4 py-2.5 text-sm font-medium transition-colors rounded-xl hover:bg-slate-50 {% if 'leaderboard' in request.path %}bg-primary-50 text-primary-600{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+    <i data-lucide="trophy" class="w-5 h-5 mr-3"></i>
+    Leaderboard
+</a>
+<a href="{% url 'feedback_analytics' w_id %}" class="flex items-center px-4 py-2.5 text-sm font-medium transition-colors rounded-xl hover:bg-slate-50 {% if 'feedback-analytics' in request.path %}bg-primary-50 text-primary-600{% else %}text-slate-600 hover:text-slate-900{% endif %}">
+    <i data-lucide="brain" class="w-5 h-5 mr-3"></i>
+    Feedback AI
+</a>
+{% endif %}
