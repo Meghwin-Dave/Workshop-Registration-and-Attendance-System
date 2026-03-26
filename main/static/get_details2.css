@@ -1,0 +1,37 @@
+*{
+    margin: 0px;
+    padding: 0px;
+}
+
+.heading{
+    text-align: center;
+    background-color: rgb(50,205,50);
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.list_item{
+    margin: 10px;
+    padding: 10px;
+    border: 2px solid grey;
+    border-radius: 10px;
+    width: auto;
+}
+
+.list_item li{
+    display: flex;
+    justify-content: space-between;
+}
+
+th{
+    padding: 5px;
+}
+
+.submit{
+    margin-left: 10px;
+    margin-top: 10px;
+    padding: 5px;
+    background-color: chocolate;
+}
+
+

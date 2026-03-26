@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+  {{ heading }}
+{% endblock %}
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+{% block content %}
+  {% if show_flag %}
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+      <h1 class="h3 mb-0 text-gray-800">{{ heading }}</h1>
+      <a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-success" data-toggle="modal" data-target="#changepasswordmodal" style="color:white">Change User Password</a>
+
+    </div>
+
+    <div class="modal fade" id="changepasswordmodal" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg"> <!-- Added modal-lg for a larger modal -->
+            <form id="changepasswordForm" class="user" method="post">
+              {% csrf_token %}
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="groupSettingsModalLabel">Group Settings</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <label for="New Password" id="label_New Password">New Password</label>
+                            <input type="text" id="New Password" name="password" value="" class="form-control form-control-user textinput textInput col col-md-8">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal" id="closegroup">Close</button>
+                        <input type="submit" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Save" style="color:white" />
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" class="user" enctype="multipart/form-data">
+          {% csrf_token %} {% crispy form %}
+          
+          <h3 class="text-danger">{{ message }}</h3>
+
+          <div class="d-sm-flex align-items-center mb-4">
+            <input type="submit" style="color:white;" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Submit"/>  {% comment %} style="background-color: {{ primary }}; color:{{ secondary }}" {% endcomment %}
+    
+            <a class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-danger" data-toggle="modal" data-target="#backtolistmodal" style="color:white">Back to List</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal fade" id="backtolistmodal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body" style="display:flex; justify-content: center;align-items: center;">
+            Are you sure you want to go back?
+          </div>
+          <div class="modal-footer" style="display:flex;justify-content: space-between;">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <a class="btn btn-danger" href="{{request.META.HTTP_REFERER}}">Back to List</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   
+  
+  
+  
+
+    <!-- Page level plugins -->
+    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="{% static 'js/demo/datatables-demo.js' %}"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Handle form submission
+            $('#changepasswordForm').submit(function(e) {
+                e.preventDefault(); // Prevent the default form submission
+                var formData = $(this).serialize();
+                
+                // Perform the AJAX request
+                $.ajax({
+                    url: '../change_password/{{user_id}}', // Your target URL
+                    type: 'POST',
+                    data: formData, // Send the serialized form data
+                    success: function(response) {
+                        // Handle the success response (e.g., show a success message, close modal)
+                        $('#closegroup').click();
+                        alert('Password Changed Successfully!');
+                    },
+                    error: function(xhr, status, error) {
+                        // Handle the error response (e.g., show an error message)
+                        console.error('Error occurred:', error);
+                        alert('Failed to save data. Please try again.');
+                    }
+                });
+            });
+        });
+        </script>
+
+
+    
+  {% else %}
+    <h1>Your are not accesible to this page</h1>
+  {% endif %}
+
+  
+{% endblock %}

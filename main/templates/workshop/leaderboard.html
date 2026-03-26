@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Leaderboard - {{ workshop.workshop_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Workshop Leaderboard: {{ workshop.workshop_name }}</h1>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top 10 Participants</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="leaderboardTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr class="bg-primary text-white">
+                                    <th>Rank</th>
+                                    <th>Visitor Name</th>
+                                    <th>Total Points</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboardBody">
+                                <!-- Data will be loaded via AJAX -->
+                                <tr>
+                                    <td colspan="3" class="text-center">Loading leaderboard...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">How to earn points?</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Attend Workshop
+                            <span class="badge badge-success badge-pill">+10 pts</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Submit Feedback
+                            <span class="badge badge-success badge-pill">+5 pts</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Participate in Poll
+                            <span class="badge badge-success badge-pill">+3 pts</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const workshopUuid = "{{ workshop.workshop_uuid }}";
+
+    function updateLeaderboard() {
+        $.getJSON(`/api/leaderboard/${workshopUuid}/`, function(data) {
+            const body = $('#leaderboardBody');
+            body.empty();
+            
+            if (data.leaderboard.length === 0) {
+                body.append('<tr><td colspan="3" class="text-center">No points earned yet.</td></tr>');
+            } else {
+                data.leaderboard.forEach(entry => {
+                    let rankClass = '';
+                    if (entry.rank === 1) rankClass = 'table-warning font-weight-bold';
+                    else if (entry.rank === 2) rankClass = 'table-light';
+                    else if (entry.rank === 3) rankClass = 'table-light';
+
+                    body.append(`
+                        <tr class="${rankClass}">
+                            <td>#${entry.rank}</td>
+                            <td>${entry.name}</td>
+                            <td>${entry.points}</td>
+                        </tr>
+                    `);
+                });
+            }
+        });
+    }
+
+    // Initial load
+    updateLeaderboard();
+    // Refresh every 30 seconds
+    setInterval(updateLeaderboard, 30000);
+</script>
+{% endblock %}

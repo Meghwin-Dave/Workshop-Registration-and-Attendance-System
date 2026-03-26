@@ -1,0 +1,175 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Workshop Details</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="{% static 'vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+
+    <style>
+        .register-logo {
+            max-width: 500px;
+            padding-top: 30px;
+        }
+
+        @media screen and (max-width: 480px) {
+            .register-logo {
+                max-width: 350px;
+                padding-top: 30px;
+            }
+        }
+
+        .section {
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        .section h4 {
+            color: black;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .section ul li {
+            padding: 5px 0;
+        }
+
+        .icon {
+            margin-right: 10px;
+            color: black;
+        }
+
+        .header-title {
+            text-align: center;
+            color: black;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-primary">
+
+    <div class="container">
+
+        <!-- Outer Row -->
+        <div class="row justify-content-center">
+
+            <!-- Workshop Details -->
+            <div class="col-xl-6 col-lg-6 col-md-6">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <!-- Logo -->
+                        <div class="d-flex justify-content-center">
+                            <img src="/media/{{ workshop_logo }}" class="register-logo" alt="Workshop Logo">
+                        </div>
+
+                        <!-- Details -->
+                        <div class="p-4">
+                            <div class="header-title">
+                                Workshop Detail
+                            </div>
+                            <div class="section">
+                                <h4><i class="fas fa-book icon"></i> Title</h4>
+                                <p>{{ workshop_name }}</p>
+                            </div>
+                            <div class="section">
+                                <h4><i class="fas fa-calendar icon"></i> Workshop Dates</h4>
+                                <ul>
+                                    {% for date in date_list %}
+                                    <li>{{ date }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="section">
+                                <h4><i class="fas fa-map-marker-alt icon"></i> Location</h4>
+                                <p>{{ workshop_location }}</p>
+                            </div>
+                            <div class="section">
+                                <h4><i class="fas fa-info-circle icon"></i> About</h4>
+                                <p>{{ workshop_description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration -->
+            <div class="col-xl-6 col-lg-6 col-md-6">
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <!-- Logo -->
+                        <div class="d-flex justify-content-center">
+                            <img src="{% static 'logo1.png' %}" style="max-width: 120px; padding-top: 30px;" alt="Logo">
+                        </div>
+
+                        <!-- Registration Content -->
+                        {% if closed %}
+                        <div class="text-center">
+                            <p class="h4 mb-4" style="color:red; padding:20px;">We are sorry, but registration for this
+                                workshop has now closed.</p>
+                        </div>
+                        {% else %}
+                        {% if not completed %}
+                        <div class="p-5">
+                            <div class="text-center">
+                                <h1 class="h4 text-gray-900 mb-4">Registration Page</h1>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="h6 text-danger mb-4">{{ message }}</h4>
+                            </div>
+
+                            <form class="user" action="" method="POST">
+                                {% crispy form %}
+                                
+                                {% comment %} {{ form.as_p }}  {% endcomment %}
+                                <input type="submit" style="color:white;" class="d-sm-inline-block btn bg-gradient-primary shadow-sm" value="Submit">
+                            </form>
+                        </div>
+                        {% else %}
+                        <div class="text-center" style="padding:20px;">
+                            <p class="h4 mb-4" style="color:green; ">Thank you for registering!</p>
+                            <p class="h4 mb-4" style="color:green; ">Your seating arrangement will be shared soon. We look forward to seeing you at the workshop. Stay tuned for further details!</p>
+                            
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+    <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+</body>
+
+</html>
+

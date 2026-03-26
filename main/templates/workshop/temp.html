@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Confirmation</title>
+    <style>
+      /* General Reset */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+      
+      /* Container styling */
+      .container {
+        max-width: 800px;
+        background: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: center;
+        margin: 20px auto;
+      }
+      
+      /* Header and Visitor Info Styling */
+      .header-logo {
+        width: 180px;
+        margin: 10px auto;
+        display: flex;
+        justify-content: center 
+      }
+      
+      .confirmation-text {
+        color: #00a651;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+      
+      .visitor-info {
+        color: #333;
+        margin-bottom: 20px;
+      }
+      .visitor-info h4 {
+        font-size: 18px;
+        margin: 5px 0;
+      }
+      
+      /* Flexbox Content Grid Styling */
+      .content-grid {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        text-align: center;
+        margin-top: 20px;
+      }
+      
+      /* Image styling */
+      .workshop-logo img {
+        width: 150px;
+        height: auto;
+        object-fit: contain;
+        border-radius: 8px;
+      }
+      
+      /* Event Details Styling */
+      .event-details {
+        max-width: 300px;
+      }
+      
+      .event-details h4 {
+        font-size: 20px;
+        color: #333;
+        margin-bottom: 10px;
+      }
+      
+      .event-details p {
+        color: #666;
+        font-size: 16px;
+        margin: 8px 0;
+      }
+      
+      /* QR Code Styling */
+      .qr-code img {
+        margin-top: 0%;
+        width: 150px;
+        height: auto;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 600px) {
+        .content-grid {
+          flex-direction: column;
+          align-items: center;
+        }
+        .visitor-info,
+        .event-details {
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="cid:register_logo" class="header-logo" alt="Event Logo" style="width: 150px; max-height: 80px;" />
+      <h1 class="confirmation-text">Your Seat is confirmed!</h1>
+      <div class="visitor-info">
+        <h4>Visitor Id: {{ visitor.id }}</h4>
+        <h4>Table Name: {{ alloted_table }}</h4>
+      </div>
+
+      <div class="content-grid">
+        <!-- Workshop Logo -->
+        <div class="workshop-logo" style="float:left">
+          <img src="cid:logo" alt="Workshop Logo" style="width: 200px; max-height: 120px;" />
+        </div>
+
+        <!-- Event Details -->
+        <div class="event-details" style="float:center">
+          <h4>{{ workshop.workshop_name }}</h4>
+          <p>
+            <i class="fas fa-clock"></i> {{ workshop.workshop_date|date:'g:i A ' }}
+          </p>
+          <p>
+            <i class="fas fa-calendar-check"></i> {{ workshop.workshop_date|date:'D, j M, Y' }}
+          </p>
+          <p>
+            <i class="fas fa-map-marker-alt"></i> {{ workshop.workshop_location }}
+          </p>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-code" style="float:right">
+          <img src="cid:qr" alt="QR Code" style="width: 300px; max-height: 200px;" />
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

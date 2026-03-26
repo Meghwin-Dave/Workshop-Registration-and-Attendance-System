@@ -1,0 +1,52 @@
+body{
+  background-color: aqua;
+}
+
+.heading {
+  margin: 0px;
+  background-color: white;
+  text-align: center;
+}
+
+
+.lab_form {
+  margin: 10px;
+  padding: 10px;
+  width: auto;
+  border: 2px solid grey;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.field{
+  margin: 10px;
+  padding: 5px;
+}
+
+.list_item {
+  margin: 10px;
+  padding: 10px;
+  border: 2px solid grey;
+  border-radius: 10px;
+  width: auto;
+}
+
+.list_item li {
+  display: flex;
+  justify-content: space-between;
+}
+
+th {
+  padding: 5px;
+}
+
+.submit {
+  padding: 5px;
+  background-color: chocolate;
+}
+
+@media only screen and (max-width: 600px) {
+  .main {
+      display: inline;
+  }
+}

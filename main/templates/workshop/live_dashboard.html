@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Live Workshop Dashboard - {{ workshop.workshop_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Live Dashboard: {{ workshop.workshop_name }}</h1>
+        <a href="{% url 'show_workshop' %}" class="btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Workshops
+        </a>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row">
+        <!-- Registered Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Registered</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-registered">...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checked In Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Checked In</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-checked-in">...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Remaining Seats Card -->
+        <div class="col-xl-2 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Remaining</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-remaining">...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chair fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Card -->
+        <div class="col-xl-2 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Feedback</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-feedback">...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-comments fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Poll Card -->
+        <div class="col-xl-2 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Poll Votes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="stat-poll">...</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-poll fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heatmap & Table Occupancy -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Table Occupancy Heatmap</h6>
+                </div>
+                <div class="card-body">
+                    <div id="heatmap-container" class="d-flex flex-wrap justify-content-center gap-3">
+                        <!-- Tables will be rendered here -->
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2"><i class="fas fa-circle text-success"></i> Empty</span>
+                        <span class="mr-2"><i class="fas fa-circle text-warning"></i> Partially Filled</span>
+                        <span class="mr-2"><i class="fas fa-circle text-danger"></i> Full</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Occupancy Chart -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Occupancy Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area" style="height: 300px;">
+                        <canvas id="occupancyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-box {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        transition: transform 0.2s;
+        margin: 10px;
+    }
+    .table-box:hover {
+        transform: scale(1.1);
+        cursor: pointer;
+    }
+    .table-id { font-size: 1.2rem; }
+    .table-count { font-size: 0.8rem; }
+    
+    .bg-green { background-color: #1cc88a; }
+    .bg-yellow { background-color: #f6c23e; }
+    .bg-red { background-color: #e74a3b; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const workshopUuid = "{{ workshop.workshop_uuid }}";
+    let occupancyChart;
+
+    function updateStats() {
+        $.getJSON(`/api/workshop-stats/${workshopUuid}/`, function(data) {
+            $('#stat-registered').text(data.registered);
+            $('#stat-checked-in').text(data.checked_in);
+            $('#stat-remaining').text(data.remaining);
+            $('#stat-feedback').text(data.feedback_count);
+            $('#stat-poll').text(data.poll_participation);
+        });
+    }
+
+    function updateHeatmap() {
+        $.getJSON(`/api/table-occupancy/${workshopUuid}/`, function(data) {
+            const container = $('#heatmap-container');
+            container.empty();
+            
+            const labels = [];
+            const occupiedData = [];
+
+            data.tables.forEach(table => {
+                const colorClass = table.status === 'red' ? 'bg-red' : (table.status === 'yellow' ? 'bg-yellow' : 'bg-green');
+                container.append(`
+                    <div class="table-box ${colorClass} shadow">
+                        <div class="table-id">T-${table.table}</div>
+                        <div class="table-count">${table.occupied}/${table.total}</div>
+                    </div>
+                `);
+                
+                labels.push(`Table ${table.table}`);
+                occupiedData.push(table.occupied);
+            });
+
+            updateChart(labels, occupiedData);
+        });
+    }
+
+    function updateChart(labels, data) {
+        if (!occupancyChart) {
+            const ctx = document.getElementById('occupancyChart').getContext('2d');
+            occupancyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Occupied Seats',
+                        data: data,
+                        backgroundColor: '#4e73df',
+                        hoverBackgroundColor: '#2e59d9',
+                        borderColor: '#4e73df',
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        } else {
+            occupancyChart.data.labels = labels;
+            occupancyChart.data.datasets[0].data = data;
+            occupancyChart.update('none'); // Update without animation for smoother refresh
+        }
+    }
+
+    // Initial load
+    updateStats();
+    updateHeatmap();
+
+    // Polling every 5 seconds
+    setInterval(() => {
+        updateStats();
+        updateHeatmap();
+    }, 5000);
+</script>
+{% endblock %}

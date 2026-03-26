@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Poll Management - {{ workshop.workshop_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Poll Management: {{ workshop.workshop_name }}</h1>
+    </div>
+
+    <div class="row">
+        <!-- Create Poll Card -->
+        <div class="col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Create New Poll</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{% url 'create_poll' workshop.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Poll Question</label>
+                            <input type="text" name="question" class="form-control" placeholder="Enter your question here..." required>
+                        </div>
+                        <div id="options-container">
+                            <label>Options</label>
+                            <div class="input-group mb-2">
+                                <input type="text" name="options" class="form-control" placeholder="Option 1" required>
+                            </div>
+                            <div class="input-group mb-2">
+                                <input type="text" name="options" class="form-control" placeholder="Option 2" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mb-3" id="add-option">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                        <hr>
+                        <button type="submit" class="btn btn-primary btn-block">Create Poll</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Polls List Card -->
+        <div class="col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Existing Polls</h6>
+                </div>
+                <div class="card-body">
+                    {% if polls %}
+                        {% for poll in polls %}
+                        <div class="card mb-3 {% if poll.is_active %}border-left-success{% endif %}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">{{ poll.question }}</h5>
+                                    <div class="d-flex align-items-center">
+                                        <button class="btn btn-sm btn-outline-primary mr-3 send-poll-email" 
+                                                data-workshop-id="{{ workshop.id }}"
+                                                title="Send poll link to all visitors via email">
+                                            <i class="fas fa-envelope"></i> Send via Email
+                                        </button>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input poll-toggle" 
+                                                   id="poll-{{ poll.id }}" 
+                                                   data-poll-id="{{ poll.id }}"
+                                                   {% if poll.is_active %}checked{% endif %}>
+                                            <label class="custom-control-label" for="poll-{{ poll.id }}">Active</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-group list-group-flush small">
+                                            {% for option in poll.options.all %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                {{ option.option_text }}
+                                                <span class="badge badge-primary badge-pill">{{ option.vote_count }}</span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <canvas id="chart-{{ poll.id }}" 
+                                                class="poll-results-chart"
+                                                data-labels='[{% for opt in poll.options.all %}"{{ opt.option_text|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]'
+                                                data-votes='[{% for opt in poll.options.all %}{{ opt.vote_count }}{% if not forloop.last %},{% endif %}{% endfor %}]'
+                                                style="max-height: 150px;"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center py-4">No polls created yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Add dynamic options
+    $('#add-option').click(function() {
+        const count = $('#options-container .input-group').length + 1;
+        $('#options-container').append(`
+            <div class="input-group mb-2">
+                <input type="text" name="options" class="form-control" placeholder="Option ${count}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-danger remove-option" type="button"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        `);
+    });
+
+    $(document).on('click', '.remove-option', function() {
+        $(this).closest('.input-group').remove();
+    });
+
+    // Send poll emails
+    $('.send-poll-email').click(function() {
+        const workshopId = $(this).data('workshop-id');
+        const btn = $(this);
+        
+        if (!confirm('Are you sure you want to send this poll link to all registered visitors?')) return;
+
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+
+        $.ajax({
+            url: `/workshop/${workshopId}/polls/send-email/`,
+            type: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    let msg = response.message;
+                    if (response.sent_to && response.sent_to.length > 0) {
+                        msg += '\n\nEmails sent to:\n- ' + response.sent_to.join('\n- ');
+                    }
+                    if (response.errors && response.errors.length > 0) {
+                        msg += '\n\nErrors encountered:\n- ' + response.errors.join('\n- ');
+                    }
+                    alert(msg);
+                } else {
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function() {
+                alert('An unexpected error occurred while sending emails.');
+            },
+            complete: function() {
+                btn.prop('disabled', false).html('<i class="fas fa-envelope"></i> Send via Email');
+            }
+        });
+    });
+
+    // Toggle poll status
+    $('.poll-toggle').change(function() {
+        const pollId = $(this).data('poll-id');
+        const isActive = $(this).is(':checked');
+        const checkbox = $(this);
+
+        $.ajax({
+            url: `/poll/${pollId}/toggle/`,
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update UI if needed (other checkboxes will be unchecked on server)
+                    if (response.is_active) {
+                        $('.poll-toggle').not(checkbox).prop('checked', false);
+                        $('.poll-toggle').closest('.card').removeClass('border-left-success');
+                        checkbox.closest('.card').addClass('border-left-success');
+                    } else {
+                        checkbox.closest('.card').removeClass('border-left-success');
+                    }
+                }
+            }
+        });
+    });
+
+    // Render results charts
+    $('.poll-results-chart').each(function() {
+        const ctx = this.getContext('2d');
+        const labels = JSON.parse(this.getAttribute('data-labels'));
+        const votes = JSON.parse(this.getAttribute('data-votes'));
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: votes,
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'],
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

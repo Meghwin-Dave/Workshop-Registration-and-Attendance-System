@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+  {{ heading }}
+{% endblock %}
+
+{% block content %}
+  {% if show_flag %}
+    <h2 style="text-align:center;">QR Code Scanner</h2>
+    <style>
+      #reader-container {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+      }
+      
+      #reader {
+        width: 100%;
+        min-height: 400px;
+        background: #f5f5f5;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+      }
+      
+      #result {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        text-align: center;
+      }
+      
+      #scan-result {
+        color: #2c3e50;
+        font-weight: bold;
+        word-break: break-all;
+      }
+      
+      .controls {
+        margin: 15px 0;
+        text-align: center;
+      }
+      
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 4px;
+        background: #007bff;
+        color: white;
+        cursor: pointer;
+      }
+      
+      button:hover {
+        background: #0056b3;
+      }
+      
+      .error-message {
+        color: #dc3545;
+        text-align: center;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 4px;
+        background: #f8d7da;
+        display: none;
+      }
+      
+      .success-message {
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        display: none;
+      }
+    </style>
+
+    <div id="reader-container">
+      <div id="reader"></div>
+      <div class="controls">
+        <button id="startButton">Start Scanner</button>
+        <button id="stopButton" style="display: none;">Stop Scanner</button>
+      </div>
+      <div id="error-message" class="error-message"></div>
+      <div id="success-message" class="success-message"></div>
+    </div>
+
+    <div id="result">
+      <span id="scan-result"></span>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script>
+      let html5QrCode = null;
+      let lastResult = null;
+      const errorMessage = document.getElementById('error-message');
+      const successMessage = document.getElementById('success-message');
+      const startButton = document.getElementById('startButton');
+      const stopButton = document.getElementById('stopButton');
+      const workshopId = "{{ workshop_id }}"; // Get workshop ID from Django context
+      
+      function showError(message) {
+        errorMessage.style.display = 'block';
+        errorMessage.textContent = message;
+      }
+      
+      function hideError() {
+        errorMessage.style.display = 'none';
+      }
+      
+      function showSuccess(message) {
+        successMessage.style.display = 'block';
+        successMessage.textContent = message;
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, 3000);
+      }
+      
+      function isValidUrl(string) {
+        try {
+          new URL(string);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+      
+      function handleUrl(url) {
+        if (isValidUrl(url)) {
+          // Use the workshop_id from context instead of hardcoded "10"
+          window.open(`${url}/${workshopId}`, '_blank');
+          showSuccess('URL opened in new tab!');
+          return true;
+        }
+        return false;
+      }
+      
+      window.addEventListener('load', function () {
+        if (typeof Html5Qrcode === 'undefined') {
+          showError('QR Code scanner library failed to load. Please refresh the page.');
+          return;
+        }
+      
+        if (!window.isSecureContext) {
+          showError('Scanner requires a secure connection (HTTPS) to access the camera.');
+          return;
+        }
+      
+        initializeScanner();
+      });
+      
+      function initializeScanner() {
+        try {
+          html5QrCode = new Html5Qrcode('reader');
+      
+          startButton.addEventListener('click', startScanner);
+          stopButton.addEventListener('click', stopScanner);
+      
+          if (!navigator.mediaDevices && !navigator.getUserMedia && 
+              !navigator.webkitGetUserMedia && !navigator.mozGetUserMedia && 
+              !navigator.msGetUserMedia) {
+            showError("Your browser doesn't support camera access. Please try a different browser.");
+            return;
+          }
+      
+          if (!navigator.mediaDevices) {
+            navigator.mediaDevices = {};
+          }
+      
+          if (!navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia = function (constraints) {
+              const getUserMedia = navigator.getUserMedia || 
+                                 navigator.webkitGetUserMedia || 
+                                 navigator.mozGetUserMedia || 
+                                 navigator.msGetUserMedia;
+      
+              if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not supported'));
+              }
+      
+              return new Promise((resolve, reject) => {
+                getUserMedia.call(navigator, constraints, resolve, reject);
+              });
+            }
+          }
+      
+          checkCameraPermissions();
+        } catch (err) {
+          showError('Failed to initialize scanner: ' + err.message);
+        }
+      }
+      
+      async function checkCameraPermissions() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach((track) => track.stop());
+          hideError();
+        } catch (err) {
+          showError('Camera permission denied. Please enable camera access to use the scanner.');
+        }
+      }
+      
+      async function startScanner() {
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        };
+      
+        try {
+          let cameraConfig = { facingMode: 'environment' };
+      
+          if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const cameras = devices.filter((device) => device.kind === 'videoinput');
+      
+              if (cameras.length > 0) {
+                const backCamera = cameras.find((camera) => 
+                  camera.label.toLowerCase().includes('back') || 
+                  camera.label.toLowerCase().includes('rear')
+                );
+      
+                if (backCamera) {
+                  cameraConfig = { deviceId: { exact: backCamera.deviceId } };
+                }
+              }
+            } catch (enumError) {
+              console.log('Camera enumeration failed, using default config:', enumError);
+            }
+          }
+      
+          await html5QrCode.start(cameraConfig, config, onScanSuccess, onScanFailure);
+      
+          startButton.style.display = 'none';
+          stopButton.style.display = 'inline-block';
+          hideError();
+        } catch (err) {
+          showError('Error starting scanner: ' + (err.message || 'Failed to start camera'));
+        }
+      }
+      
+      async function stopScanner() {
+        try {
+          if (html5QrCode && html5QrCode.isScanning) {
+            await html5QrCode.stop();
+            startButton.style.display = 'inline-block';
+            stopButton.style.display = 'none';
+            hideError();
+          }
+        } catch (err) {
+          showError('Error stopping scanner: ' + err.message);
+        }
+      }
+      
+      function onScanSuccess(decodedText, decodedResult) {
+        if (lastResult === decodedText) return;
+      
+        lastResult = decodedText;
+        document.getElementById('scan-result').textContent = decodedText;
+      
+        if (!handleUrl(decodedText)) {
+          showSuccess('QR Code scanned successfully!');
+        }
+      }
+      
+      function onScanFailure(error) {
+        console.debug('Code scan error = ' + error);
+      }
+    </script>
+  {% else %}
+    <div class="text-center">
+      <div class="error mx-auto" data-text="404">404</div>
+      <p class="lead text-gray-800 mb-5">Not Authorized for this page</p>
+      <p class="text-gray-500 mb-0">Contact the admin to get the access...</p>
+      <a href="/">&larr; Back to Dashboard</a>
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,183 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Live Poll - {{ workshop.workshop_name }}</title>
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600,700" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body { background-color: #f8f9fc; }
+        .poll-container { max-width: 600px; margin: 50px auto; padding: 20px; }
+        .option-card { cursor: pointer; transition: all 0.2s; border-left: 5px solid transparent; }
+        .option-card:hover { transform: translateX(5px); background-color: #f1f3f9; }
+        .option-card.selected { border-left-color: #4e73df; background-color: #eaecf4; }
+    </style>
+</head>
+<body>
+    <div class="container poll-container">
+        <div class="text-center mb-4">
+            {% if workshop.workshop_logo %}
+                <img src="{{ workshop.workshop_logo.url }}" alt="Logo" style="max-height: 80px;" class="mb-3">
+            {% endif %}
+            <h2 class="h4 text-gray-900">{{ workshop.workshop_name }}</h2>
+            <p class="text-muted">Live Workshop Poll</p>
+        </div>
+
+        <div id="poll-content" class="card shadow">
+            <div class="card-body py-5 text-center" id="loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading poll...</span>
+                </div>
+                <p class="mt-2">Waiting for an active poll...</p>
+            </div>
+
+            <div id="no-poll" class="card-body py-5 text-center d-none">
+                <i class="fas fa-poll-h fa-3x text-gray-300 mb-3"></i>
+                <h4 class="text-gray-500">No active poll at the moment</h4>
+                <p>Please wait for the presenter to start a poll.</p>
+            </div>
+
+            <div id="voting-area" class="card-body d-none">
+                <h3 id="question" class="h5 font-weight-bold text-gray-800 mb-4 text-center"></h3>
+                <div id="options-list">
+                    <!-- Options will be injected here -->
+                </div>
+                <button id="submit-vote" class="btn btn-primary btn-block mt-4" disabled>Submit Vote</button>
+            </div>
+
+            <div id="results-area" class="card-body d-none text-center">
+                <h3 id="result-question" class="h5 font-weight-bold text-gray-800 mb-4"></h3>
+                <div class="alert alert-success py-2">Your vote has been recorded!</div>
+                <div style="height: 300px;">
+                    <canvas id="resultsChart"></canvas>
+                </div>
+                <p class="small text-muted mt-3">Results update live as others vote.</p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="small text-gray-500">Logged in as: {{ visitor.first_name }} {{ visitor.last_name }}</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const workshopUuid = "{{ workshop.workshop_uuid }}";
+        const visitorUuid = "{{ visitor.WorkshopVisitors_uuid }}";
+        let selectedOptionId = null;
+        let resultsChart = null;
+        let currentPollId = null;
+
+        function checkPoll() {
+            $.getJSON(`/api/live-poll/${workshopUuid}/?visitor_uuid=${visitorUuid}`, function(data) {
+                $('#loading').addClass('d-none');
+                
+                if (!data.active) {
+                    $('#no-poll').removeClass('d-none');
+                    $('#voting-area').addClass('d-none');
+                    $('#results-area').addClass('d-none');
+                    currentPollId = null;
+                    return;
+                }
+
+                $('#no-poll').addClass('d-none');
+                currentPollId = data.poll_id;
+
+                if (data.has_voted) {
+                    $('#voting-area').addClass('d-none');
+                    $('#results-area').removeClass('d-none');
+                    $('#result-question').text(data.question);
+                    updateResultsChart(data.options);
+                } else {
+                    $('#results-area').addClass('d-none');
+                    $('#voting-area').removeClass('d-none');
+                    $('#question').text(data.question);
+                    renderOptions(data.options);
+                }
+            });
+        }
+
+        function renderOptions(options) {
+            const list = $('#options-list');
+            list.empty();
+            options.forEach(opt => {
+                list.append(`
+                    <div class="card option-card mb-2 shadow-sm" data-option-id="${opt.id}">
+                        <div class="card-body py-3">
+                            ${opt.option_text}
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        $(document).on('click', '.option-card', function() {
+            $('.option-card').removeClass('selected');
+            $(this).addClass('selected');
+            selectedOptionId = $(this).data('option-id');
+            $('#submit-vote').prop('disabled', false);
+        });
+
+        $('#submit-vote').click(function() {
+            if (!selectedOptionId || !currentPollId) return;
+            
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Submitting...');
+
+            $.ajax({
+                url: `/api/poll-vote/${currentPollId}/`,
+                type: 'POST',
+                data: JSON.stringify({
+                    visitor_uuid: visitorUuid,
+                    option_id: selectedOptionId
+                }),
+                contentType: 'application/json',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                success: function() {
+                    checkPoll();
+                },
+                error: function(xhr) {
+                    alert(xhr.responseJSON.error || 'Error submitting vote');
+                    $('#submit-vote').prop('disabled', false).text('Submit Vote');
+                }
+            });
+        });
+
+        function updateResultsChart(options) {
+            const labels = options.map(o => o.option_text);
+            const data = options.map(o => o.vote_count);
+
+            if (!resultsChart) {
+                const ctx = document.getElementById('resultsChart').getContext('2d');
+                resultsChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Votes',
+                            data: data,
+                            backgroundColor: '#4e73df',
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    }
+                });
+            } else {
+                resultsChart.data.labels = labels;
+                resultsChart.data.datasets[0].data = data;
+                resultsChart.update('none');
+            }
+        }
+
+        // Poll for poll status every 5 seconds
+        checkPoll();
+        setInterval(checkPoll, 5000);
+    </script>
+</body>
+</html>

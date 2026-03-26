@@ -1,0 +1,32 @@
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
+.report_list {
+  list-style-type: none;
+}
+
+.heading {
+  text-align: center;
+  background-color: white;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+.list_element {
+  margin: 10px 5px;
+  padding: 15px;
+  border: 1px solid grey;
+  border-radius: 13px;
+  box-shadow: 2px 2px 2px #888888;
+}
+
+.list_element li {
+  display: flex;
+  justify-content: space-between;
+}
+
+.heading2 {
+  text-align: center;
+}

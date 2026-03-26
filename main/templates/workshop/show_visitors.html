@@ -1,0 +1,630 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+  {{ heading }}
+{% endblock %}
+
+{% block content %}
+  <style>
+     
+    .table-head {
+      background-color: #171151 !important;
+      color: white !important;
+    }
+
+    .table-bordered {
+      border: 1px solid #e3e6f0;
+    }
+    .TableDarkFont {
+      color: #444;
+      font-size: 0.9rem;
+    }
+    .modal-header {
+      border-radius: 0.3rem 0.3rem 0 0;
+      background-color: #327dea  !important;
+      border-bottom: none;
+      padding: 1rem 1.5rem;
+    }
+    .modal-content {
+      border: none;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .modal-body {
+      color: #444;
+      font-size: 0.9rem;
+      padding: 1.5rem;
+    }
+    .feedback-details {
+      font-size: 0.9rem;
+    }
+    .modal-body h6 {
+      color: #4e73df !important;
+      font-weight: 600 !important;
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      border-radius: 0.2rem;
+    }
+    .fa-sm {
+      font-size: 0.875rem;
+    }
+    .generate-ticket-link {
+      color: black;
+      text-decoration: none;
+    }
+    .generate-ticket-link:hover {
+      color: #2e59d9;
+      text-decoration: underline;
+    }
+    .close {
+      opacity: 1;
+      text-shadow: none;
+      transition: opacity 0.15s;
+    }
+    .close:hover {
+      color: #fff;
+      opacity: 0.75;
+    }
+    .close:focus {
+      outline: none;
+    }
+    .feedback-details .row {
+      margin-left: 0;
+      margin-right: 0;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #e3e6f0;
+    }
+    .feedback-details .row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .feedback-details strong {
+      color: #444;
+    }
+    #star-rating {
+      display: inline-flex;
+      gap: 0.25rem;
+    }
+    .star {
+      color: #fbbf24;
+      width: 1rem;
+      height: 1rem;
+    }
+    .star-empty {
+      color: #d1d5db;
+    }
+    .show-feedback {
+      color: #4e73df;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .show-feedback:hover {
+      text-decoration: underline;
+      color: #2e59d9;
+    }
+    /* Loading spinner styles */
+    .loading-spinner {
+      display: inline-block;
+      width: 2rem;
+      height: 2rem;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4e73df;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  {% if show_flag %}
+    {% if success_msg == 1 %}
+      <input id="nameshow" value="{{ name1 }}" style="display:none;" />
+      <script>
+        var name_id = document.getElementById('nameshow').value
+        alert(`Your Data Saved Successfully for Report Id ${name_id}`)
+      </script>
+    {% endif %}
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+      <h1 class="h3 mb-0 text-gray-800">{{ heading }}</h1>
+      <div>
+        <a href="#" data-toggle="modal" data-target="#backtolistmodal" class="d-sm-inline-block btn btn-sm btn-danger shadow-sm">
+          <i class="fas fa-arrow-left fa-sm text-white"></i> Back to Workshop
+        </a>
+      </div>
+    </div>
+
+    <!-- Back to List Modal -->
+    <div class="modal fade" id="backtolistmodal" tabindex="-1" role="dialog" aria-labelledby="backtolistmodalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-body text-center py-4">Are you sure you want to go back?</div>
+          <div class="modal-footer justify-content-between">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <a class="btn btn-danger" href="{{ request.META.HTTP_REFERER }}">Back to List</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="card shadow mb-4">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered TableDarkFont" id="dataTable" width="100%" cellspacing="0" data-page-length='150'>
+            <thead>
+                <tr>
+                    {% for i in columns %}
+                        <th class="table-head">{{ i }}</th>
+                    {% endfor %}
+                    <th class="table-head">Ticket</th>
+                    <th class="table-head">Download Ticket</th>
+                    {% if is_closed %}
+                        <th class="table-head">Feedback</th>
+                        <th class="table-head">Edit Details</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in data %}
+                    <tr data-workshop-id="{{ obj.workshop_id }}">
+                        <td></td>
+                        <td>{{ obj.first_name }} {{ obj.last_name }}</td>
+                        <td>{{ obj.mobile_number }}</td>
+                        <td>{{ obj.email }}</td>
+                        <td>
+                          {% if not is_designation_required and obj.designation %}
+                            {{ obj.designation }}
+                          {% endif %}
+                          {% if obj.designation_text %}
+                            {{ obj.designation_text }}
+                          {% endif %}
+                        </td>
+                        <td>{% if obj.is_presenter %} Yes {% else %} No {% endif %}</td>
+                        <td>{{ obj.alloted_table }}</td>
+                        <td>{{ obj.alloted_group }}</td>
+                        <td>{{ obj.is_visited }}</td>
+                        <td>
+                            <a href="{% url 'generate_ticket' obj.id %}" target="_blank" class="generate-ticket-link">Generate Ticket</a>
+                        </td>
+                        <td>
+                          <a href="{% url 'download_ticket' obj.id %}">Download</a>
+                        </td> 
+                        {% if is_closed %}
+                            <td class="text-center">
+                                {% if obj.feedback_set.exists %}
+                                    <button href="#" class="btn show-feedback" data-uuid="{{ obj.WorkshopVisitors_uuid }}" style="width: 100%; border-radius: 5px; font-weight: bold; background-color: #ff5733; color: white; border: none;">Show </button>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn edit-details-link" data-uuid="{{ obj.WorkshopVisitors_uuid }}" data-toggle="modal" data-target="#editDetailsModal" style="width: 100%; border-radius: 5px; font-weight: bold; background-color: #ff5733; color: white; border: none;">Edit </button>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    
+    <div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-white" id="feedbackModalLabel">
+              <center>Feedback</center>
+            </h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" id="closeModalBtn">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div id="loading-spinner" class="text-center py-4" style="display: none;">
+              <div class="loading-spinner"></div>
+            </div>
+    
+            <div id="feedback-content" style="display: none;">
+              <h6>Feedback</h6>
+              <div class="feedback-details">
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 1 </strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-1"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 2</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-2"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 3 (Star Rating)</strong>
+                  </div>
+                  <div class="col-8">
+                    <div class="d-flex align-items-center">
+                      <span id="feedback-question-3" class="mr-2"></span>
+                      <div id="star-rating"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 4</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-4"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 5 (Knowledge Level)</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-5"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 6</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-6"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 7 (Satisfaction Level)</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-7"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 8</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-8"></div>
+                </div>
+                <div class="row">
+                  <div class="col-4">
+                    <strong>Question 9</strong>
+                  </div>
+                  <div class="col-8" id="feedback-question-9"></div>
+                </div>
+              </div>
+            </div>
+            <div id="no-feedback-message" style="display: none;">
+              <p class="text-center">No feedback has been submitted yet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Edit Details Modal -->
+    <div class="modal fade" id="editDetailsModal" tabindex="-1" role="dialog" aria-labelledby="editDetailsModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title text-white" id="editDetailsModalLabel">Edit Visitor Details</h5>
+                  <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" >
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+              <div class="modal-body">
+                  <form id="editDetailsForm">
+                      {% csrf_token %}
+                      <input type="hidden" id="edit-visitor-uuid" name="visitor_uuid">
+                      <div class="form-group">
+                          <label>First Name</label>
+                          <input type="text" class="form-control" id="edit-first-name" name="first_name" required>
+                      </div>
+                      <div class="form-group">
+                          <label>Last Name</label>
+                          <input type="text" class="form-control" id="edit-last-name" name="last_name">
+                      </div>
+                      <div class="form-group">
+                          <label>Mobile Number</label>
+                          <input type="text" class="form-control" id="edit-mobile" name="mobile_number" required>
+                      </div>
+                      <div class="form-group">
+                          <label>Email</label>
+                          <input type="email" class="form-control" id="edit-email" name="email" required>
+                      </div>
+                      <div class="form-group">
+                          <label>Designation</label>
+                          <select class="form-control" id="edit-designation" name="designation" required>
+                              <option value="">Select Designation</option>
+                          </select>
+                      </div>
+                      <div class="form-group">
+                          <label>Alloted Table</label>
+                          <input type="text" class="form-control" id="edit-table" name="alloted_table" required>
+                      </div>
+                      <div class="form-group">
+                          <label>Alloted Group</label>
+                          <select id="edit-group" name="alloted_group" class="form-control" >
+                              <option value="">Select Group</option>
+                          </select>
+                      </div>
+                  </form>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" id="saveEditDetailsBtn">Save Changes</button>
+              </div>
+          </div>
+      </div>
+    </div>
+  
+
+
+    {% if is_closed and not are_emails_sent %}
+    <div class="modal-footer">
+        <a href="{% url 'send_emails' workshop_id %}" 
+           class="d-sm-inline-block btn btn shadow-sm ml-1 bg-gradient-primary" 
+           style="color:white" 
+           id="submitButton" 
+           onclick="disableButton()">Submit
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Required Scripts -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+  
+    <!-- Feedback Modal Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const feedbackLinks = document.querySelectorAll('.show-feedback');
+        const feedbackModal = $('#feedbackModal');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const feedbackContent = document.getElementById('feedback-content');
+      
+    
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        closeModalBtn.addEventListener('click', function () {
+          feedbackModal.modal('hide');
+        });
+      
+
+        feedbackModal.on('click', function (e) {
+          if ($(e.target).is('.modal')) {
+            feedbackModal.modal('hide');
+          }
+        });
+      
+        // Close modal when pressing ESC key
+        $(document).on('keydown', function (e) {
+          if (e.key === 'Escape') {
+            feedbackModal.modal('hide');
+          }
+      });
+      
+        // Handle feedback link clicks
+      feedbackLinks.forEach((link) => {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            const uuid = this.dataset.uuid;
+      
+            feedbackModal.modal('show');
+            loadingSpinner.style.display = 'block';
+            feedbackContent.style.display = 'none';
+      
+            fetch(`/show-feedback/${uuid}/`)
+              .then((response) => response.json())
+              .then((data) => {
+                loadingSpinner.style.display = 'none';
+      
+                if (data.success && data.feedback.length > 0) {
+                  const feedback = data.feedback[0];
+      
+                  // Populate feedback questions
+                  document.getElementById('feedback-question-1').textContent = feedback.question_1_response || 'N/A';
+                  document.getElementById('feedback-question-2').textContent = feedback.question_2_response || 'N/A';
+                  document.getElementById('feedback-question-3').textContent = `${feedback.question_3_response}/5` || 'N/A';
+                  document.getElementById('feedback-question-4').textContent = feedback.question_4_response || 'N/A';
+                  document.getElementById('feedback-question-5').textContent = feedback.question_5_response || 'N/A';
+                  document.getElementById('feedback-question-6').textContent = feedback.question_6_response || 'N/A';
+                  document.getElementById('feedback-question-7').textContent = feedback.question_7_response || 'N/A';
+                  document.getElementById('feedback-question-8').textContent = feedback.question_8_response || 'N/A';
+                  document.getElementById('feedback-question-9').textContent = feedback.question_9_response || 'N/A';
+      
+                  feedbackContent.style.display = 'block';
+                } else {
+                  document.getElementById('no-feedback-message').style.display = 'block';
+                }
+              })
+              .catch((error) => {
+                console.error('Error fetching feedback:', error);
+                loadingSpinner.style.display = 'none';
+                document.getElementById('no-feedback-message').style.display = 'block';
+              });
+          });
+        });
+      });
+    </script>
+    <!-- Ensure these are included before your script -->
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Edit Modal Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const editLinks = document.querySelectorAll('.edit-details-link');
+        const editModal = $('#editDetailsModal');
+        const designationDropdown = document.getElementById('edit-designation');
+        const groupDropdown = document.getElementById('edit-group');
+        // Function to load designations and groups based on the workshopId
+        
+        function loadDesignationsAndGroups(workshopId, selectedDesignation, selectedGroup) {
+          if (!workshopId) {
+            console.error('Workshop ID is null or undefined');
+            return;
+          }
+
+        fetch(`/get-designations-and-groups/{{workshop_id}}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch designations and groups');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear existing options
+                designationDropdown.innerHTML = '';
+                groupDropdown.innerHTML = '';
+                
+                // Populate Designations dropdown
+                data.designations.forEach(designation => {
+                    const option = document.createElement('option');
+                    option.value = designation.id;
+                    option.textContent = designation.designation_name;
+
+                    // Pre-select the option if it matches the selected designation
+                    if (designation.designation_name === selectedDesignation) {
+                        option.selected = true;
+                    }
+
+                    designationDropdown.appendChild(option);
+                });
+
+                // Populate groups dropdown
+                data.groups.forEach(group => {
+                  const option = document.createElement('option');
+                  option.value = group.id;  // Use the ID as the value
+                  option.textContent = group.group_name;
+                  // Pre-select the option if it matches the selected group
+                  if (group.group_name === selectedGroup) {
+                    option.selected = true;
+                  }
+                  groupDropdown.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching designations and groups:', error));
+        }
+        
+        editLinks.forEach((link) => {
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+
+            // Get the row data
+            const row = this.closest('tr');
+            const cells = row.getElementsByTagName('td');
+            
+            // Get full name (split title, first name, last name)
+            const fullName = cells[1].textContent.trim().split(' ');
+            const title = fullName.length > 1 ? fullName[0] : '';
+            const firstName = fullName.length > 1 ? fullName[1] : fullName[0];
+            const lastName = fullName.length > 2 ? fullName.slice(2).join(' ') : '';
+            
+            // Populate modal fields
+            document.getElementById('edit-visitor-uuid').value = this.getAttribute('data-uuid');
+            document.getElementById('edit-first-name').value = title + ' ' + firstName;
+            document.getElementById('edit-last-name').value = lastName;
+            document.getElementById('edit-mobile').value = cells[2].textContent;
+            document.getElementById('edit-email').value = cells[3].textContent;
+            document.getElementById('edit-table').value = cells[5].textContent;
+            
+            // Get the workshopId from the row
+            const workshopId = row.getAttribute('data-workshop-id');
+            
+            // Get designation and group
+            const designation = cells[4].textContent.trim();
+            const group = cells[6].textContent.trim();
+
+            // Load Designations and Groups based on workshopId
+            loadDesignationsAndGroups(workshopId, designation, group);
+            
+            // Show the modal
+            editModal.modal('show');
+          });
+        });
+        document.getElementById('saveEditDetailsBtn').addEventListener('click', function () {
+          const form = document.getElementById('editDetailsForm');
+          const formData = new FormData(form);
+          fetch('/edit-visitor-details/', {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Visitor details updated successfully');
+              editModal.modal('hide');
+              location.reload();  // Refresh the page
+            } else {
+                alert('Failed to update details: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating details');
+          });
+        }); 
+      });
+
+      $(document).ready(function() {
+        var table = $('#dataTable').DataTable({
+            "lengthMenu": [[10, 25, 50, 100, 150, -1], [10, 25, 50, 100, 150, "Show All"]],
+            "aaSorting": [],
+            "columnDefs": [
+                {
+                    "targets": 0,
+                    "searchable": false,
+                    "orderable": true,
+                    "render": function (data, type, row, meta) {
+                        return meta.row + 1;
+                    }
+                },
+                {
+                    "targets": $('#dataTable thead th:contains("Alloted Table")').index(),
+                    "type": "num-fmt",
+                    "render": function(data, type, row) {
+                        if (type === 'sort') {
+                            if (!data || data.trim() === '' || data.trim() === '-') {
+                                return 999999;
+                            }
+                            const match = data.match(/T?(\d+)/);
+                            return match ? parseInt(match[1]) : 999999;
+                        }
+                        return data;
+                    }
+                }
+            ],
+            "order": [[$('#dataTable thead th:contains("Alloted Table")').index(), 'asc']],
+            "drawCallback": function(settings) {
+                // Update serial numbers on each draw
+                this.api().column(0).nodes().each(function(cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }
+        });
+    });
+    </script>
+      
+  {% else %}
+    <!-- Not Authorized Content -->
+    <div class="text-center">
+      <div class="error mx-auto" data-text="404">404</div>
+      <p class="lead text-gray-800 mb-5">Not Authorized for this page</p>
+      <p class="text-gray-500 mb-0">Contact the admin to get the access...</p>
+      <a href="/">&larr; Back to Dashboard</a>
+    </div>
+  {% endif %}
+{% endblock %}

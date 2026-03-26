@@ -1,0 +1,108 @@
+{% extends "base.html" %} 
+
+{% load static %}
+
+{% block title %} {{heading}} {% endblock title %} 
+
+{% block content %}
+{% comment %} <style>
+    .page-item.active .page-link {
+        background-color: {{primary}};
+        color : {{secondary}};
+    }
+</style> {% endcomment %}
+
+<style>
+    .table-head{
+        background-color: #171151 !important;
+        color: white !important;
+    }
+</style>
+
+{% if show_flag %}
+    {% if success_msg == 1 %}
+        <input id="nameshow" value={{name1}} style="display:none;">
+        <script>
+            var name_id = document.getElementById("nameshow").value
+            alert(`Your Data Saved Successfully for Report Id ${name_id}`);
+        </script>
+    {% endif %}
+    {% comment %} <h1 class="h3 mb-0 text-gray-800">{{ heading }}</h1> {% endcomment %}
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0">{{heading}}</h1>
+        <div>
+            <a href="{{ add_url }}"  style="color:white;" class="d-sm-inline-block btn btn-sm btn shadow-sm bg-gradient-primary">
+                <i style="color: white;" class="fas fa-plus fa-sm -50"></i> Create Workshop
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered TableDarkFont" id="dataTable" style="color: #000;"width="100%"cellspacing="0">
+                    <thead >
+                        <tr>
+                            {% for i in columns %}
+                            <th class="table-head" > {{i}} </th>
+                            {% endfor %}
+                            <th class="table-head"> Actions </th>
+                        </tr>
+                    </thead>
+                    <tbody class = 'TableDarkFont'>
+                        {% for obj in data %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{obj.workshop_name}}</td>
+                            <td>{% if obj.workshop_start_date and obj.workshop_end_date %}Start Date - {{ obj.workshop_start_date|date:"d-m-Y h:i A" }} <br>End Date - {{ obj.workshop_end_date|date:"d-m-Y h:i A"}}{% else %}
+                            {{obj.workshop_start_date}}{% endif %}</td>  
+                            <td>{{obj.workshop_seats}}</td>  
+                            <td>
+                                <a href="{{ edit_url }}/{{ obj.pk }}" style="padding:3px 2px" class="btn bg-gradient-success btn-circle" title="Edit this Workshop"><i class="fa fa-pencil"></i></a>
+                                <a href="../register/{{ obj.workshop_uuid }}" style="padding:3px 2px" class="btn bg-gradient-warning btn-circle" title="Copy Register Link for this Workshop" target="_blank"><i class="fas fa-paperclip"></i></a>
+                                <a href="../show_visitors/{{ obj.pk }}" style="padding:3px 2px" class="btn bg-gradient-info btn-circle" title="Show Visitors for this Workshop"><i class="fa fa-user"></i></a>
+                                {% comment %} <a href="../qr_scanner/{{ obj.id}}/" style="padding:3px 2px" class="btn bg-gradient-warning btn-circle"><i class="fa fa-qrcode"></i></i></a> {% endcomment %}
+                                <a href="" style="padding:3px 2px" class="btn bg-gradient-warning btn-circle"><i class="fa fa-qrcode"></i></i></a>
+
+                                <a href="javascript:void(0);" style="padding:3px 2px" class="btn bg-gradient-danger btn-circle" title="Delete this Workshop" onclick="confirmDelete('{{ delete_url }}/{{ obj.pk }}')"><i class="fa fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}   
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(url) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                window.location.href = url;
+            }
+        }
+    </script>
+
+    <!-- Page level plugins -->
+    <script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="{% static 'js/demo/datatables-demo.js' %}"></script>
+{% else %}
+<div class="text-center">
+    <div class="error mx-auto" data-text="404">404</div>
+    <p class="lead text-gray-800 mb-5">Not Authorized for this page</p>
+    <p class="text-gray-500 mb-0">Contact the admin to get the access...</p>
+    <a href="/">&larr; Back to Dashboard</a>
+</div>
+{% endif %}
+
+<script>
+    function getid(id){
+        console.log(id,"id");
+        document.cookie = "id="+id+";path=/"
+    }
+    
+</script>
+
+{% endblock content %}

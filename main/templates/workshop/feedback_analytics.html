@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedback Analytics - {{ workshop.workshop_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Feedback Sentiment Analysis: {{ workshop.workshop_name }}</h1>
+    </div>
+
+    <div class="row">
+        <!-- Sentiment Pie Chart -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Sentiment Breakdown</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4" style="height: 350px;">
+                        <canvas id="sentimentPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Keywords -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Keywords in Feedback</h6>
+                </div>
+                <div class="card-body">
+                    <div id="keyword-cloud" class="d-flex flex-wrap justify-content-center py-4">
+                        <!-- Keywords will be loaded here -->
+                        <div class="text-center">Loading keywords...</div>
+                    </div>
+                    <hr>
+                    <div class="small text-muted">Based on frequency extraction from open-ended feedback responses.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const workshopUuid = "{{ workshop.workshop_uuid }}";
+    let sentimentChart;
+
+    function updateAnalytics() {
+        $.getJSON(`/api/feedback-sentiment/${workshopUuid}/`, function(data) {
+            updatePieChart(data.sentiment);
+            updateKeywords(data.keywords);
+        });
+    }
+
+    function updatePieChart(sentiment) {
+        const labels = Object.keys(sentiment);
+        const counts = Object.values(sentiment);
+
+        if (!sentimentChart) {
+            const ctx = document.getElementById('sentimentPieChart').getContext('2d');
+            sentimentChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ['#e74a3b', '#858796', '#1cc88a'], // red=Negative, grey=Neutral, green=Positive (order might vary)
+                        // Note: Keys in summary are Positive, Neutral, Negative. Let's fix colors to match.
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+            // Fix colors based on labels
+            const colors = labels.map(label => {
+                if (label === 'Positive') return '#1cc88a';
+                if (label === 'Negative') return '#e74a3b';
+                return '#858796';
+            });
+            sentimentChart.data.datasets[0].backgroundColor = colors;
+            sentimentChart.update();
+        } else {
+            sentimentChart.data.labels = labels;
+            sentimentChart.data.datasets[0].data = counts;
+            sentimentChart.update();
+        }
+    }
+
+    function updateKeywords(keywords) {
+        const container = $('#keyword-cloud');
+        container.empty();
+        
+        if (keywords.length === 0) {
+            container.append('<div>No keywords extracted yet.</div>');
+            return;
+        }
+
+        keywords.forEach(kw => {
+            const [word, count] = kw;
+            // Simple scale for font size
+            const size = Math.min(2.5, 1 + (count * 0.2));
+            container.append(`
+                <span class="badge badge-pill badge-outline-primary m-2" style="font-size: ${size}rem; border: 1px solid #4e73df; color: #4e73df; padding: 0.5rem 1rem;">
+                    ${word}
+                </span>
+            `);
+        });
+    }
+
+    // Initial load
+    updateAnalytics();
+</script>
+{% endblock %}
