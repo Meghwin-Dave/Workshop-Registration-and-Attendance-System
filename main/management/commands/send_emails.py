@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from main.models import Workshop, WorkshopVisitors
-from ...config import config
+from main.config import config
 
 class Command(BaseCommand):
     help = "Seating Arrangement for Upcoming Workshop – Important Details Inside"

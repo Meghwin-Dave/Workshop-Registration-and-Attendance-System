@@ -527,7 +527,7 @@ def generate_qr_code(visitor_id):
     try:
         print(visitor_id)
         visitor = get_object_or_404(models.WorkshopVisitors, id=visitor_id)
-        # base_url = "https://icretegy-wsra.enviroerp.com"
+        # base_url = f"{config.base_url}"
         base_url = f"{config.base_url}"
         verification_url = f"{base_url}/verify_visitor/{visitor.WorkshopVisitors_uuid}"
         
@@ -814,7 +814,7 @@ def sms_feedback(request):
         return redirect('home')
 
 # def download_ticket(request, id):
-#     # base_url = "https://icretegy-wsra.enviroerp.com/ticket/"
+#     # base_url = f"{config.base_url}/ticket/"
 #     base_url = f"{config.base_url}/ticket/"
 #     target_url = f"{base_url}{id}/"
     
@@ -865,7 +865,7 @@ import requests
 from bs4 import BeautifulSoup
 
 # def download_ticket(request, id):
-#     # base_url = "https://icretegy-wsra.enviroerp.com/ticket/"
+#     # base_url = f"{config.base_url}/ticket/"
 #     # img_base_url = f"{config.base_url}"
 #     img_base_url = "http://127.0.0.1:8000/"
 #     print(img_base_url)

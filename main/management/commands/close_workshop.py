@@ -233,6 +233,15 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS('Workshop closed successfully'))
 
+            # Automatically trigger email sending to all participants
+            self.stdout.write(self.style.NOTICE('Starting automatic ticket distribution...'))
+            from django.core.management import call_command
+            try:
+                call_command('send_emails', workshop_id)
+                self.stdout.write(self.style.SUCCESS('Automatic ticket distribution started.'))
+            except Exception as email_err:
+                self.stdout.write(self.style.ERROR(f'Auto-email failed: {str(email_err)}'))
+
         except Workshop.DoesNotExist:
             self.stdout.write(self.style.WARNING(f'Workshop with ID {workshop_id} does not exist'))
         except Exception as e:

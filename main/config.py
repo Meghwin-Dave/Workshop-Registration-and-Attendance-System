@@ -1,8 +1,7 @@
 class Config:
     def __init__(self):
-        # self._base_url = "https://icretegy-wsra.enviroerp.com"
         # self._base_url ="https://workshop-registration.icretegy.com"
-        self._base_url ="http://127.0.0.1:8001"
+        self._base_url ="http://127.0.0.1:8000"
     @property
     def base_url(self):
         return self._base_url

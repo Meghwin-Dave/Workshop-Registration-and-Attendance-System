@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -10,8 +11,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -29,13 +35,14 @@
         }
     </script>
 </head>
+
 <body class="bg-slate-50 min-h-screen flex flex-col items-center justify-center p-4">
     <div class="max-w-4xl w-full" x-data="{ 
         step: {% if form_errors %}2{% else %}1{% endif %}, 
         completed: {% if completed %}true{% else %}false{% endif %}, 
         closed: {% if closed %}true{% else %}false{% endif %} 
     }" x-cloak>
-        
+
         <!-- Closed Message -->
         <template x-if="closed">
             <div class="bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
@@ -43,46 +50,43 @@
                     <i data-lucide="lock" class="w-8 h-8"></i>
                 </div>
                 <h1 class="text-2xl font-bold text-slate-900">Registration Closed</h1>
-                <p class="text-slate-500 max-w-md mx-auto">We're sorry, but registration for this workshop has now closed. Please contact the administrator for more information.</p>
+                <p class="text-slate-500 max-w-md mx-auto">We're sorry, but registration for this workshop has now
+                    closed. Please contact the administrator for more information.</p>
             </div>
         </template>
 
         <!-- Completed Message -->
-        <template x-if="completed">
-            <div class="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center space-y-6">
-                <div class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
-                    <i data-lucide="party-popper" class="w-10 h-10"></i>
-                </div>
-                <div class="space-y-2">
-                    <h1 class="text-3xl font-bold text-slate-900">Registration Successful!</h1>
-                    <p class="text-slate-500 max-w-lg mx-auto text-lg leading-relaxed">
-                        Thank you for registering for <span class="font-semibold text-primary-600">{{ workshop_name }}</span>. 
-                        Your seating arrangement and tickets will be shared via email shortly. We look forward to seeing you there!
-                    </p>
-                </div>
-                <div class="pt-4">
-                    <a href="/" class="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all">
-                        <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
-                        Return to Home
-                    </a>
-                </div>
+        <div x-show="completed" x-cloak
+            class="bg-white rounded-3xl p-12 shadow-xl border border-slate-100 text-center space-y-6">
+            <div
+                class="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-3xl flex items-center justify-center mx-auto animate-bounce">
+                <i data-lucide="party-popper" class="w-10 h-10"></i>
             </div>
-        </template>
+            <div class="space-y-2">
+                <h1 class="text-3xl font-bold text-slate-900">Registration Successful!</h1>
+                <p class="text-slate-500 max-w-lg mx-auto text-lg leading-relaxed">
+                    Thank you for registering for <span class="font-semibold text-primary-600">{{ workshop_name }}</span>.
+                    Your seating arrangement and tickets will be shared via email shortly. We look forward to seeing
+                    you there!
+                </p>
+            </div>
+        </div>
 
         <!-- Multi-Step Wizard -->
         <template x-if="!closed && !completed">
-            <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-                
+            <div
+                class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden flex flex-col md:flex-row min-h-[600px]">
+
                 <!-- Sidebar Info -->
                 <div class="md:w-1/3 bg-slate-900 p-8 text-white flex flex-col justify-between">
                     <div>
                         <div class="mb-8">
                             {% if workshop_logo %}
-                                <img src="/media/{{ workshop_logo }}" class="h-12 w-auto brightness-0 invert" alt="Logo">
+                            <img src="/media/{{ workshop_logo }}" class="h-12 w-auto brightness-0 invert" alt="Logo">
                             {% else %}
-                                <div class="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
-                                    <i data-lucide="book-open" class="w-6 h-6"></i>
-                                </div>
+                            <div class="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
+                                <i data-lucide="book-open" class="w-6 h-6"></i>
+                            </div>
                             {% endif %}
                         </div>
                         <h2 class="text-xl font-bold mb-4">{{ workshop_name }}</h2>
@@ -107,16 +111,24 @@
                     <!-- Progress Stepper -->
                     <div class="mt-12 space-y-6">
                         <div class="flex items-center space-x-4">
-                            <div :class="step >= 1 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">1</div>
+                            <div :class="step >= 1 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'"
+                                class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">
+                                1</div>
                             <span :class="step >= 1 ? 'text-white font-semibold' : 'text-slate-500'">Review Event</span>
                         </div>
                         <div class="flex items-center space-x-4">
-                            <div :class="step >= 2 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">2</div>
-                            <span :class="step >= 2 ? 'text-white font-semibold' : 'text-slate-500'">Personal Info</span>
+                            <div :class="step >= 2 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'"
+                                class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">
+                                2</div>
+                            <span :class="step >= 2 ? 'text-white font-semibold' : 'text-slate-500'">Personal
+                                Info</span>
                         </div>
                         <div class="flex items-center space-x-4">
-                            <div :class="step >= 3 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'" class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">3</div>
-                            <span :class="step >= 3 ? 'text-white font-semibold' : 'text-slate-500'">Final Details</span>
+                            <div :class="step >= 3 ? 'bg-primary-500 border-primary-500' : 'bg-transparent border-slate-700'"
+                                class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all">
+                                3</div>
+                            <span :class="step >= 3 ? 'text-white font-semibold' : 'text-slate-500'">Final
+                                Details</span>
                         </div>
                     </div>
                 </div>
@@ -125,7 +137,7 @@
                 <div class="md:w-2/3 p-8 md:p-12">
                     <form action="" method="POST" class="h-full flex flex-col">
                         {% csrf_token %}
-                        
+
                         <!-- Step 1: Workshop Overview -->
                         <div x-show="step === 1" class="space-y-6 h-full">
                             <div class="space-y-2">
@@ -137,7 +149,8 @@
                                 <p class="text-sm text-slate-600 leading-relaxed">{{ workshop_description }}</p>
                             </div>
                             <div class="flex-grow"></div>
-                            <button type="button" @click="step = 2" class="w-full py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all flex items-center justify-center">
+                            <button type="button" @click="step = 2"
+                                class="w-full py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all flex items-center justify-center">
                                 Continue to Details
                                 <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
                             </button>
@@ -149,11 +162,12 @@
                                 <h3 class="text-2xl font-bold text-slate-900">Attendee Information</h3>
                                 <p class="text-slate-500">How should we address you and send your tickets?</p>
                             </div>
-                            
+
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">Prefix</label>
-                                    <select name="prefix_first_name_0" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                                    <select name="prefix_first_name_0" required
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
                                         <option value="Mr.">Mr.</option>
                                         <option value="Mrs.">Mrs.</option>
                                         <option value="Ms.">Ms.</option>
@@ -162,19 +176,27 @@
                                 </div>
                                 <div class="md:col-span-2 space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">First Name</label>
-                                    <input type="text" name="prefix_first_name_1" value="{{ form.prefix_first_name.value.1|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="John">
+                                    <input type="text" name="prefix_first_name_1"
+                                        value="{{ form.prefix_first_name.value.1|default:'' }}" required
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                        placeholder="John">
                                 </div>
                             </div>
 
                             <div class="space-y-1.5">
                                 <label class="text-sm font-semibold text-slate-700">Last Name</label>
-                                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Doe">
+                                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}"
+                                    required
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                    placeholder="Doe">
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">Email Address</label>
-                                    <input type="email" name="email" value="{{ form.email.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="john@example.com">
+                                    <input type="email" name="email" value="{{ form.email.value|default:'' }}" required
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                        placeholder="john@example.com">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">Mobile Number</label>
@@ -182,21 +204,22 @@
                                 </div>
                             </div>
 
-                            {% if form_errors %}
                             <div class="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
-                                <p class="text-xs font-bold text-rose-600 uppercase mb-2">Please correct the following:</p>
+                                <p class="text-xs font-bold text-rose-600 uppercase mb-2">Please correct the following:
+                                </p>
                                 <ul class="text-xs text-rose-500 list-disc list-inside space-y-1">
                                     {% for field, errors in form_errors.items %}
-                                        <li>{{ field|title }}: {{ errors.0 }}</li>
+                                    <li>{{ field|title }}: {{ errors.0 }}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
-                            {% endif %}
 
                             <div class="flex-grow"></div>
                             <div class="flex space-x-4">
                                 <button type="button" @click="step = 1" class="px-6 py-4 text-slate-600 font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">Back</button>
-                                <button type="button" @click="step = 3" class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Next Step</button>
+                                <button type="button" @click="step = 3"
+                                    class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Next
+                                    Step</button>
                             </div>
                         </div>
 
@@ -210,11 +233,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">Department</label>
-                                    <input type="text" name="department" value="{{ form.department.value|default:'' }}" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Engineering">
+                                    <input type="text" name="department" value="{{ form.department.value|default:'' }}"
+                                        required
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                        placeholder="Engineering">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-sm font-semibold text-slate-700">Are you a Presenter?</label>
-                                    <select name="is_presenter" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                                    <select name="is_presenter" required
+                                        class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
                                         <option value="False">No</option>
                                         <option value="True">Yes</option>
                                     </select>
@@ -226,29 +253,38 @@
                                 <select name="designation" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all">
                                     <option value="">Select Designation</option>
                                     {% if form.fields.designation.choices %}
-                                        {% for choice_id, choice_label in form.fields.designation.choices %}
-                                            {% if choice_id %}
-                                                <option value="{{ choice_id }}" {% if form.designation.value == choice_id|stringformat:"s" %}selected{% endif %}>{{ choice_label }}</option>
-                                            {% endif %}
-                                        {% endfor %}
+                                    {% for choice_id, choice_label in form.fields.designation.choices %}
+                                    {% if choice_id %}
+                                    <option value="{{ choice_id }}" {% if form.designation.value == choice_id|stringformat:"s" %}selected{% endif %}>{{ choice_label }}</option>
+                                    {% endif %}
+                                    {% endfor %}
                                     {% endif %}
                                 </select>
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="text-sm font-semibold text-slate-700">Specific Title (if not in list)</label>
-                                <input type="text" name="designation_text" value="{{ form.designation_text.value|default:'' }}" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all" placeholder="Lead Architect">
+                                <label class="text-sm font-semibold text-slate-700">Specific Title (if not in
+                                    list)</label>
+                                <input type="text" name="designation_text"
+                                    value="{{ form.designation_text.value|default:'' }}"
+                                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+                                    placeholder="Lead Architect">
                             </div>
 
-                            <div class="flex items-start space-x-3 p-4 bg-primary-50 rounded-2xl border border-primary-100 italic text-sm text-primary-700">
+                            <div
+                                class="flex items-start space-x-3 p-4 bg-primary-50 rounded-2xl border border-primary-100 italic text-sm text-primary-700">
                                 <i data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
-                                <p>By clicking submit, you agree to receive event-related notifications and your QR ticket via email.</p>
+                                <p>By clicking submit, you agree to receive event-related notifications and your QR
+                                    ticket via email.</p>
                             </div>
 
                             <div class="flex-grow"></div>
                             <div class="flex space-x-4">
-                                <button type="button" @click="step = 2" class="px-6 py-4 text-slate-600 font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">Back</button>
-                                <button type="submit" class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Submit Registration</button>
+                                <button type="button" @click="step = 2"
+                                    class="px-6 py-4 text-slate-600 font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">Back</button>
+                                <button type="submit"
+                                    class="flex-grow py-4 text-base font-bold text-white bg-primary-600 rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Submit
+                                    Registration</button>
                             </div>
                         </div>
                     </form>
@@ -261,4 +297,5 @@
         lucide.createIcons();
     </script>
 </body>
+
 </html>
